@@ -11,10 +11,15 @@ import { join } from 'path';
 import { randomUUID } from 'crypto';
 import { Document, DocumentStatus } from './entities/document.entity';
 import { DocumentResponseDto } from './dto/document-response.dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { INGESTION_QUEUE } from '../ingestion/ingestion.processor';
 
 @Injectable()
 export class DocumentsService {
   constructor(
+    @InjectQueue(INGESTION_QUEUE)
+    private ingestionQueue: Queue,
     @InjectRepository(Document)
     private documentRepository: Repository<Document>,
     private configService: ConfigService,
@@ -43,6 +48,16 @@ export class DocumentsService {
       status: DocumentStatus.PENDING,
     });
     await this.documentRepository.save(document);
+    await this.ingestionQueue.add(
+      'process-document',
+      { documentId: document.id },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 },
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
+    );
 
     return this.toResponseDto(document);
   }
