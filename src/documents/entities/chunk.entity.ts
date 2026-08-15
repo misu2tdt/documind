@@ -9,16 +9,23 @@ import {
 } from 'typeorm';
 import { Document } from './document.entity';
 
+@Index('UQ_chunks_document_id_chunk_index', ['documentId', 'chunkIndex'], {
+  unique: true,
+})
+@Index('IDX_chunks_embedding_hnsw_cosine', { synchronize: false })
 @Entity('chunks')
 export class Chunk {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @ManyToOne(() => Document, (doc) => doc.chunks, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'document_id' })
+  @JoinColumn({
+    name: 'document_id',
+    foreignKeyConstraintName: 'FK_chunks_document_id',
+  })
   document!: Document;
 
-  @Index()
+  @Index('IDX_chunks_document_id')
   @Column({ name: 'document_id' })
   documentId!: string;
 
@@ -34,14 +41,7 @@ export class Chunk {
   @Column({ type: 'int' })
   tokenCount!: number;
 
-  @Column({
-    type: 'varchar',
-    nullable: true,
-    transformer: {
-      to: (value: number[] | null) => (value ? `[${value.join(',')}]` : null),
-      from: (value: string | null) => (value ? JSON.parse(value) : null),
-    },
-  })
+  @Column({ type: 'vector', length: 1536, nullable: true })
   embedding!: number[] | null;
 
   @CreateDateColumn()
