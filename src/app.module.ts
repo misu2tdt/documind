@@ -18,7 +18,8 @@ import { DocumentsModule } from './documents/documents.module';
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_DATABASE'),
         autoLoadEntities: true,
-        synchronize: config.get<string>('NODE_ENV') !== 'production',
+        synchronize: false,
+        installExtensions: false,
       }),
     }),
 
