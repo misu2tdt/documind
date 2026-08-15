@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { promises as fs } from 'fs';
-import pdfParse from 'pdf-parse';
 import { PageText } from './chunking.service';
+
+const pdfParse = require('pdf-parse');
 
 @Injectable()
 export class PdfParserService {
