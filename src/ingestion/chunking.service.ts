@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EnvironmentVariables } from '../config/environment';
 
 export interface TextChunk {
   content: string;
@@ -18,11 +19,15 @@ export class ChunkingService {
   private readonly chunkSizeTokens: number;
   private readonly overlapPercent: number;
 
-  constructor(private configService: ConfigService) {
-    this.chunkSizeTokens =
-      this.configService.get<number>('CHUNK_SIZE_TOKENS') ?? 800;
-    this.overlapPercent =
-      this.configService.get<number>('CHUNK_OVERLAP_PERCENT') ?? 15;
+  constructor(
+    private configService: ConfigService<EnvironmentVariables, true>,
+  ) {
+    this.chunkSizeTokens = this.configService.get('CHUNK_SIZE_TOKENS', {
+      infer: true,
+    });
+    this.overlapPercent = this.configService.get('CHUNK_OVERLAP_PERCENT', {
+      infer: true,
+    });
   }
 
   private estimateTokens(text: string): number {
@@ -53,7 +58,9 @@ export class ChunkingService {
     if (!cleaned) return [];
 
     const charsPerChunk = this.chunkSizeTokens * 4;
-    const overlapChars = Math.floor(charsPerChunk * (this.overlapPercent / 100));
+    const overlapChars = Math.floor(
+      charsPerChunk * (this.overlapPercent / 100),
+    );
 
     const sentences = cleaned.split(/(?<=[.!?])\s+/);
     const chunks: string[] = [];

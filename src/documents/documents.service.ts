@@ -14,6 +14,7 @@ import { DocumentResponseDto } from './dto/document-response.dto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { INGESTION_QUEUE } from '../ingestion/ingestion.processor';
+import { EnvironmentVariables } from '../config/environment';
 
 @Injectable()
 export class DocumentsService {
@@ -22,10 +23,12 @@ export class DocumentsService {
     private ingestionQueue: Queue,
     @InjectRepository(Document)
     private documentRepository: Repository<Document>,
-    private configService: ConfigService,
+    private configService: ConfigService<EnvironmentVariables, true>,
   ) {}
 
-  async uploadDocument(file: Express.Multer.File): Promise<DocumentResponseDto> {
+  async uploadDocument(
+    file: Express.Multer.File,
+  ): Promise<DocumentResponseDto> {
     if (!file) {
       throw new BadRequestException('Không có file nào được gửi lên.');
     }
@@ -33,8 +36,7 @@ export class DocumentsService {
       throw new BadRequestException('Chỉ chấp nhận file PDF.');
     }
 
-    const uploadDir =
-      this.configService.get<string>('UPLOAD_DIR') ?? './uploads';
+    const uploadDir = this.configService.get('UPLOAD_DIR', { infer: true });
     await fs.mkdir(uploadDir, { recursive: true });
 
     const storedName = `${randomUUID()}.pdf`;

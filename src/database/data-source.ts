@@ -2,14 +2,17 @@ import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import { Document } from '../documents/entities/document.entity';
 import { Chunk } from '../documents/entities/chunk.entity';
+import { validateEnvironment } from '../config/environment';
+
+const environment = validateEnvironment(process.env);
 
 export default new DataSource({
   type: 'postgres',
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
+  host: environment.DB_HOST,
+  port: environment.DB_PORT,
+  username: environment.DB_USERNAME,
+  password: environment.DB_PASSWORD,
+  database: environment.DB_DATABASE,
   entities: [Document, Chunk],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,

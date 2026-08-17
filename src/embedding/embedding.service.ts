@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
+import { EnvironmentVariables } from '../config/environment';
 
 @Injectable()
 export class EmbeddingService {
@@ -8,13 +9,13 @@ export class EmbeddingService {
   private readonly client: OpenAI;
   private readonly model: string;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService<EnvironmentVariables, true>,
+  ) {
     this.client = new OpenAI({
-      apiKey: this.configService.get<string>('OPENAI_API_KEY'),
+      apiKey: this.configService.get('OPENAI_API_KEY', { infer: true }),
     });
-    this.model =
-      this.configService.get<string>('EMBEDDING_MODEL') ??
-      'text-embedding-3-small';
+    this.model = this.configService.get('EMBEDDING_MODEL', { infer: true });
   }
 
   async embedOne(text: string): Promise<number[]> {

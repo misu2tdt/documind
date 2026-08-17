@@ -4,11 +4,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { Job } from 'bullmq';
-import { Document, DocumentStatus } from '../documents/entities/document.entity';
+import {
+  Document,
+  DocumentStatus,
+} from '../documents/entities/document.entity';
 import { Chunk } from '../documents/entities/chunk.entity';
 import { PdfParserService } from './pdf-parser.service';
 import { ChunkingService } from './chunking.service';
 import { EmbeddingService } from '../embedding/embedding.service';
+import { EnvironmentVariables } from '../config/environment';
 
 export const INGESTION_QUEUE = 'ingestion';
 
@@ -25,11 +29,12 @@ export class IngestionProcessor extends WorkerHost {
     private pdfParser: PdfParserService,
     private chunking: ChunkingService,
     private embedding: EmbeddingService,
-    private configService: ConfigService,
+    private configService: ConfigService<EnvironmentVariables, true>,
   ) {
     super();
-    this.batchSize =
-      this.configService.get<number>('EMBEDDING_BATCH_SIZE') ?? 50;
+    this.batchSize = this.configService.get('EMBEDDING_BATCH_SIZE', {
+      infer: true,
+    });
   }
 
   async process(job: Job<{ documentId: string }>): Promise<void> {
