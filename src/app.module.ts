@@ -7,6 +7,7 @@ import {
   EnvironmentVariables,
   validateEnvironment,
 } from './config/environment';
+import { RetrievalModule } from './retrieval/retrieval.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import {
     }),
 
     DocumentsModule,
+    RetrievalModule,
   ],
 })
 export class AppModule {}

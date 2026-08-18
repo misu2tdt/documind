@@ -15,6 +15,7 @@ export interface EnvironmentVariables {
   CHUNK_SIZE_TOKENS: number;
   CHUNK_OVERLAP_PERCENT: number;
   EMBEDDING_BATCH_SIZE: number;
+  RETRIEVAL_TOP_K: number;
 }
 
 export const ENV_DEFAULTS = {
@@ -26,6 +27,7 @@ export const ENV_DEFAULTS = {
   CHUNK_SIZE_TOKENS: 800,
   CHUNK_OVERLAP_PERCENT: 15,
   EMBEDDING_BATCH_SIZE: 50,
+  RETRIEVAL_TOP_K: 5,
 } as const;
 
 function requiredString(config: Record<string, unknown>, key: string): string {
@@ -150,6 +152,13 @@ export function validateEnvironment(
       1,
       2048,
       ENV_DEFAULTS.EMBEDDING_BATCH_SIZE,
+    ),
+    RETRIEVAL_TOP_K: integerInRange(
+      config,
+      'RETRIEVAL_TOP_K',
+      1,
+      100,
+      ENV_DEFAULTS.RETRIEVAL_TOP_K,
     ),
   };
 }
