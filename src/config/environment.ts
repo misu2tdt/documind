@@ -20,6 +20,7 @@ export interface EnvironmentVariables {
   RETRIEVAL_MIN_SIMILARITY: number;
   GENERATION_MODEL: string;
   GENERATION_MAX_TOKENS: number;
+  GENERATION_CONTEXT_MAX_CHARS: number;
 }
 
 export type DatabaseEnvironmentVariables = Pick<
@@ -40,6 +41,7 @@ export const ENV_DEFAULTS = {
   RETRIEVAL_MIN_SIMILARITY: 0.5,
   GENERATION_MODEL: 'claude-sonnet-4-6',
   GENERATION_MAX_TOKENS: 1024,
+  GENERATION_CONTEXT_MAX_CHARS: 12_000,
 } as const;
 
 function requiredString(config: Record<string, unknown>, key: string): string {
@@ -232,6 +234,13 @@ export function validateEnvironment(
       1,
       8192,
       ENV_DEFAULTS.GENERATION_MAX_TOKENS,
+    ),
+    GENERATION_CONTEXT_MAX_CHARS: integerInRange(
+      config,
+      'GENERATION_CONTEXT_MAX_CHARS',
+      512,
+      1_000_000,
+      ENV_DEFAULTS.GENERATION_CONTEXT_MAX_CHARS,
     ),
   };
 }
