@@ -16,6 +16,7 @@ export interface EnvironmentVariables {
   CHUNK_OVERLAP_PERCENT: number;
   EMBEDDING_BATCH_SIZE: number;
   RETRIEVAL_TOP_K: number;
+  RETRIEVAL_MIN_SIMILARITY: number;
 }
 
 export const ENV_DEFAULTS = {
@@ -28,6 +29,7 @@ export const ENV_DEFAULTS = {
   CHUNK_OVERLAP_PERCENT: 15,
   EMBEDDING_BATCH_SIZE: 50,
   RETRIEVAL_TOP_K: 5,
+  RETRIEVAL_MIN_SIMILARITY: 0.5,
 } as const;
 
 function requiredString(config: Record<string, unknown>, key: string): string {
@@ -82,6 +84,39 @@ function integerInRange(
   if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum) {
     throw new Error(
       `Environment validation failed: ${key} must be an integer between ${minimum} and ${maximum}`,
+    );
+  }
+
+  return parsed;
+}
+
+function numberInRange(
+  config: Record<string, unknown>,
+  key: string,
+  minimum: number,
+  maximum: number,
+  defaultValue?: number,
+): number {
+  const rawValue = config[key];
+  const value =
+    rawValue === undefined || rawValue === null || rawValue === ''
+      ? defaultValue
+      : rawValue;
+
+  if (value === undefined) {
+    throw new Error(`Environment validation failed: ${key} is required`);
+  }
+
+  const parsed =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string' && value.trim().length > 0
+        ? Number(value)
+        : Number.NaN;
+
+  if (!Number.isFinite(parsed) || parsed < minimum || parsed > maximum) {
+    throw new Error(
+      `Environment validation failed: ${key} must be a number between ${minimum} and ${maximum}`,
     );
   }
 
@@ -159,6 +194,13 @@ export function validateEnvironment(
       1,
       100,
       ENV_DEFAULTS.RETRIEVAL_TOP_K,
+    ),
+    RETRIEVAL_MIN_SIMILARITY: numberInRange(
+      config,
+      'RETRIEVAL_MIN_SIMILARITY',
+      -1,
+      1,
+      ENV_DEFAULTS.RETRIEVAL_MIN_SIMILARITY,
     ),
   };
 }
