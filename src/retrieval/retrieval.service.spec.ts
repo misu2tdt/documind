@@ -16,7 +16,9 @@ describe('RetrievalService', () => {
     const dataSource = { query } as unknown as DataSource;
     const embeddingService = { embedOne } as unknown as EmbeddingService;
     const configService = {
-      get: jest.fn().mockReturnValue(5),
+      get: jest.fn((key: keyof EnvironmentVariables) =>
+        key === 'RETRIEVAL_TOP_K' ? 5 : 0.5,
+      ),
     } as unknown as ConfigService<EnvironmentVariables, true>;
 
     service = new RetrievalService(dataSource, embeddingService, configService);
@@ -44,11 +46,25 @@ describe('RetrievalService', () => {
     expect(embedOne).toHaveBeenCalledWith('matching query');
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('c.embedding <=> $1::vector'),
-      [JSON.stringify([1, 0, 0]), 5],
+      [JSON.stringify([1, 0, 0]), 5, 0.5, 'completed'],
     );
     expect(query).toHaveBeenCalledWith(
-      expect.not.stringContaining('c.document_id = $3'),
-      [JSON.stringify([1, 0, 0]), 5],
+      expect.not.stringContaining('c.document_id = $5'),
+      [JSON.stringify([1, 0, 0]), 5, 0.5, 'completed'],
+    );
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining('AND d.status = $4'),
+      expect.any(Array),
+    );
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining('AND 1 - (c.embedding <=> $1::vector) >= $3'),
+      expect.any(Array),
+    );
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'ORDER BY c.embedding <=> $1::vector ASC, c.id ASC',
+      ),
+      expect.any(Array),
     );
   });
 
@@ -60,8 +76,36 @@ describe('RetrievalService', () => {
     await service.search('filtered query', 2, documentId);
 
     expect(query).toHaveBeenCalledWith(
-      expect.stringContaining('AND c.document_id = $3'),
-      [JSON.stringify([0, 1, 0]), 2, documentId],
+      expect.stringContaining('AND c.document_id = $5'),
+      [JSON.stringify([0, 1, 0]), 2, 0.5, 'completed', documentId],
     );
   });
+
+  it('trims the query before embedding it', async () => {
+    embedOne.mockResolvedValue([1, 0, 0]);
+    query.mockResolvedValue([]);
+
+    await service.search('  useful query  ');
+
+    expect(embedOne).toHaveBeenCalledWith('useful query');
+  });
+
+  it.each(['', '   ', '\n\t'])('rejects an empty query: %j', async (value) => {
+    await expect(service.search(value)).rejects.toThrow(
+      'Query must not be empty',
+    );
+    expect(embedOne).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([0, 101, 1.5, Number.NaN])(
+    'rejects an invalid topK: %s',
+    async (topK) => {
+      await expect(service.search('query', topK)).rejects.toThrow(
+        'topK must be an integer between 1 and 100',
+      );
+      expect(embedOne).not.toHaveBeenCalled();
+      expect(query).not.toHaveBeenCalled();
+    },
+  );
 });

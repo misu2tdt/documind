@@ -60,15 +60,7 @@ describe('Retrieval integration', () => {
     await dataSource.initialize();
     await dataSource.runMigrations();
 
-    const embeddingService = { embedOne } as unknown as EmbeddingService;
-    const configService = {
-      get: jest.fn().mockReturnValue(5),
-    } as unknown as ConfigService<EnvironmentVariables, true>;
-    retrievalService = new RetrievalService(
-      dataSource,
-      embeddingService,
-      configService,
-    );
+    retrievalService = createRetrievalService();
   });
 
   beforeEach(async () => {
@@ -83,14 +75,27 @@ describe('Retrieval integration', () => {
     if (dataSource?.isInitialized) await dataSource.destroy();
   });
 
-  async function createDocument(filename: string): Promise<Document> {
+  function createRetrievalService(minimumSimilarity = 0.5): RetrievalService {
+    const embeddingService = { embedOne } as unknown as EmbeddingService;
+    const configService = {
+      get: jest.fn((key: keyof EnvironmentVariables) =>
+        key === 'RETRIEVAL_TOP_K' ? 5 : minimumSimilarity,
+      ),
+    } as unknown as ConfigService<EnvironmentVariables, true>;
+    return new RetrievalService(dataSource, embeddingService, configService);
+  }
+
+  async function createDocument(
+    filename: string,
+    status = DocumentStatus.COMPLETED,
+  ): Promise<Document> {
     const repository = dataSource.getRepository(Document);
     return repository.save(
       repository.create({
         filename,
         storagePath: filename,
         fileSizeBytes: 100,
-        status: DocumentStatus.COMPLETED,
+        status,
       }),
     );
   }
@@ -99,7 +104,7 @@ describe('Retrieval integration', () => {
     document: Document,
     chunkIndex: number,
     content: string,
-    embedding: number[],
+    embedding: number[] | null,
   ): Promise<Chunk> {
     const repository = dataSource.getRepository(Chunk);
     return repository.save(
@@ -170,5 +175,44 @@ describe('Retrieval integration', () => {
       documentId: secondDocument.id,
       filename: 'second.pdf',
     });
+  });
+
+  it('applies the similarity threshold and excludes incomplete documents and null embeddings', async () => {
+    const completed = await createDocument('completed.pdf');
+    const processing = await createDocument(
+      'processing.pdf',
+      DocumentStatus.PROCESSING,
+    );
+    const included = await createChunk(
+      completed,
+      0,
+      'above threshold',
+      vector([0, 0.8], [1, 0.6]),
+    );
+    await createChunk(
+      completed,
+      1,
+      'below threshold',
+      vector([0, 0.7], [1, Math.sqrt(0.51)]),
+    );
+    await createChunk(processing, 0, 'incomplete exact match', vector([0, 1]));
+    await createChunk(completed, 2, 'missing embedding', null);
+
+    const results = await createRetrievalService(0.75).search('query text', 10);
+
+    expect(results).toHaveLength(1);
+    expect(results[0]?.chunkId).toBe(included.id);
+  });
+
+  it('orders equal similarity scores deterministically by chunk id', async () => {
+    const document = await createDocument('ties.pdf');
+    const first = await createChunk(document, 0, 'first tie', vector([0, 1]));
+    const second = await createChunk(document, 1, 'second tie', vector([0, 1]));
+
+    const results = await retrievalService.search('query text', 5);
+
+    expect(results.map((result) => result.chunkId)).toEqual(
+      [first.id, second.id].sort(),
+    );
   });
 });

@@ -34,6 +34,7 @@ describe('validateEnvironment', () => {
       CHUNK_OVERLAP_PERCENT: '0',
       EMBEDDING_BATCH_SIZE: '100',
       RETRIEVAL_TOP_K: '25',
+      RETRIEVAL_MIN_SIMILARITY: '0.72',
     });
 
     expect(environment).toMatchObject({
@@ -44,6 +45,7 @@ describe('validateEnvironment', () => {
       CHUNK_OVERLAP_PERCENT: 0,
       EMBEDDING_BATCH_SIZE: 100,
       RETRIEVAL_TOP_K: 25,
+      RETRIEVAL_MIN_SIMILARITY: 0.72,
     });
   });
 
@@ -75,6 +77,7 @@ describe('validateEnvironment', () => {
     ['CHUNK_OVERLAP_PERCENT', '100'],
     ['EMBEDDING_BATCH_SIZE', '0'],
     ['RETRIEVAL_TOP_K', '101'],
+    ['RETRIEVAL_MIN_SIMILARITY', '1.01'],
   ])('rejects an out-of-range numeric variable: %s=%s', (key, value) => {
     expect(() =>
       validateEnvironment({ ...requiredEnvironment(), [key]: value }),
