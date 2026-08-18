@@ -30,7 +30,10 @@ describe('QuestionsService', () => {
   it('retrieves context, generates an answer, and returns source citations', async () => {
     const documentId = source.documentId;
     search.mockResolvedValue([source]);
-    generate.mockResolvedValue('Seven years. [Source 1]');
+    generate.mockResolvedValue({
+      answer: 'Seven years. [Source 1]',
+      sources: [source],
+    });
 
     await expect(
       service.answer('  How long?  ', 3, documentId),
@@ -52,7 +55,10 @@ describe('QuestionsService', () => {
   it('deduplicates chunks and ignores blank source content', async () => {
     const blank = { ...source, chunkId: 'blank', content: '   ' };
     search.mockResolvedValue([source, { ...source }, blank]);
-    generate.mockResolvedValue('Grounded answer. [Source 1]');
+    generate.mockResolvedValue({
+      answer: 'Grounded answer. [Source 1]',
+      sources: [source],
+    });
 
     const response = await service.answer('question');
 
@@ -72,10 +78,77 @@ describe('QuestionsService', () => {
 
   it('omits citations when the model reports insufficient context', async () => {
     search.mockResolvedValue([source]);
-    generate.mockResolvedValue(INSUFFICIENT_CONTEXT_ANSWER);
+    generate.mockResolvedValue({
+      answer: INSUFFICIENT_CONTEXT_ANSWER,
+      sources: [source],
+    });
 
     await expect(service.answer('unsupported question')).resolves.toEqual({
       answer: INSUFFICIENT_CONTEXT_ANSWER,
+      citations: [],
+    });
+  });
+
+  it('returns only the subset of sources cited by the answer', async () => {
+    const second = {
+      ...source,
+      chunkId: '550e8400-e29b-41d4-a716-446655440002',
+      filename: 'policy.pdf',
+      pageNumber: 4,
+    };
+    const third = {
+      ...source,
+      chunkId: '550e8400-e29b-41d4-a716-446655440003',
+      filename: 'appendix.pdf',
+      pageNumber: 9,
+    };
+    search.mockResolvedValue([source, second, third]);
+    generate.mockResolvedValue({
+      answer: 'The policy is described here. [Source 2]',
+      sources: [source, second, third],
+    });
+
+    const response = await service.answer('policy question');
+
+    expect(response.citations).toEqual([
+      {
+        documentId: second.documentId,
+        filename: second.filename,
+        pageNumber: second.pageNumber,
+        chunkId: second.chunkId,
+      },
+    ]);
+  });
+
+  it('deduplicates citations in deterministic first-reference order', async () => {
+    const second = {
+      ...source,
+      chunkId: '550e8400-e29b-41d4-a716-446655440002',
+      filename: 'policy.pdf',
+    };
+    search.mockResolvedValue([source, second]);
+    generate.mockResolvedValue({
+      answer: '[Source 2] then [Source 1] and [Source 2] again.',
+      sources: [source, second],
+    });
+
+    const response = await service.answer('ordered citations');
+
+    expect(response.citations.map((citation) => citation.chunkId)).toEqual([
+      second.chunkId,
+      source.chunkId,
+    ]);
+  });
+
+  it('ignores invalid and nonexistent source markers safely', async () => {
+    search.mockResolvedValue([source]);
+    generate.mockResolvedValue({
+      answer: 'Invalid [Source 0], [Source 2], and [Source unknown].',
+      sources: [source],
+    });
+
+    await expect(service.answer('invalid citations')).resolves.toEqual({
+      answer: 'Invalid [Source 0], [Source 2], and [Source unknown].',
       citations: [],
     });
   });

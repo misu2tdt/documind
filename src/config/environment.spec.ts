@@ -42,6 +42,7 @@ describe('validateEnvironment', () => {
       RETRIEVAL_MIN_SIMILARITY: '0.72',
       GENERATION_MODEL: 'claude-test-model',
       GENERATION_MAX_TOKENS: '2048',
+      GENERATION_CONTEXT_MAX_CHARS: '16000',
     });
 
     expect(environment).toMatchObject({
@@ -55,6 +56,7 @@ describe('validateEnvironment', () => {
       RETRIEVAL_MIN_SIMILARITY: 0.72,
       GENERATION_MODEL: 'claude-test-model',
       GENERATION_MAX_TOKENS: 2048,
+      GENERATION_CONTEXT_MAX_CHARS: 16_000,
     });
   });
 
@@ -89,6 +91,7 @@ describe('validateEnvironment', () => {
     ['RETRIEVAL_TOP_K', '101'],
     ['RETRIEVAL_MIN_SIMILARITY', '1.01'],
     ['GENERATION_MAX_TOKENS', '8193'],
+    ['GENERATION_CONTEXT_MAX_CHARS', '511'],
   ])('rejects an out-of-range numeric variable: %s=%s', (key, value) => {
     expect(() =>
       validateEnvironment({ ...requiredEnvironment(), [key]: value }),
