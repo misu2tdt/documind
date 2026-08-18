@@ -7,5 +7,6 @@ import { RetrievalService } from './retrieval.service';
   imports: [EmbeddingModule],
   controllers: [RetrievalController],
   providers: [RetrievalService],
+  exports: [RetrievalService],
 })
 export class RetrievalModule {}

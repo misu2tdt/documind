@@ -8,6 +8,7 @@ import {
   validateEnvironment,
 } from './config/environment';
 import { RetrievalModule } from './retrieval/retrieval.module';
+import { QuestionsModule } from './questions/questions.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { RetrievalModule } from './retrieval/retrieval.module';
 
     DocumentsModule,
     RetrievalModule,
+    QuestionsModule,
   ],
 })
 export class AppModule {}
