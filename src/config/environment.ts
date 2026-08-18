@@ -7,6 +7,7 @@ export interface EnvironmentVariables {
   REDIS_HOST: string;
   REDIS_PORT: number;
   OPENAI_API_KEY: string;
+  ANTHROPIC_API_KEY: string;
   APP_PORT: number;
   UPLOAD_DIR: string;
   MAX_FILE_SIZE_MB: number;
@@ -17,7 +18,14 @@ export interface EnvironmentVariables {
   EMBEDDING_BATCH_SIZE: number;
   RETRIEVAL_TOP_K: number;
   RETRIEVAL_MIN_SIMILARITY: number;
+  GENERATION_MODEL: string;
+  GENERATION_MAX_TOKENS: number;
 }
+
+export type DatabaseEnvironmentVariables = Pick<
+  EnvironmentVariables,
+  'DB_HOST' | 'DB_PORT' | 'DB_USERNAME' | 'DB_PASSWORD' | 'DB_DATABASE'
+>;
 
 export const ENV_DEFAULTS = {
   APP_PORT: 3001,
@@ -30,6 +38,8 @@ export const ENV_DEFAULTS = {
   EMBEDDING_BATCH_SIZE: 50,
   RETRIEVAL_TOP_K: 5,
   RETRIEVAL_MIN_SIMILARITY: 0.5,
+  GENERATION_MODEL: 'claude-sonnet-4-6',
+  GENERATION_MAX_TOKENS: 1024,
 } as const;
 
 function requiredString(config: Record<string, unknown>, key: string): string {
@@ -123,19 +133,28 @@ function numberInRange(
   return parsed;
 }
 
-export function validateEnvironment(
+export function validateDatabaseEnvironment(
   config: Record<string, unknown>,
-): EnvironmentVariables {
+): DatabaseEnvironmentVariables {
   return {
-    ...config,
     DB_HOST: requiredString(config, 'DB_HOST'),
     DB_PORT: integerInRange(config, 'DB_PORT', 1, 65_535),
     DB_USERNAME: requiredString(config, 'DB_USERNAME'),
     DB_PASSWORD: requiredString(config, 'DB_PASSWORD'),
     DB_DATABASE: requiredString(config, 'DB_DATABASE'),
+  };
+}
+
+export function validateEnvironment(
+  config: Record<string, unknown>,
+): EnvironmentVariables {
+  return {
+    ...config,
+    ...validateDatabaseEnvironment(config),
     REDIS_HOST: requiredString(config, 'REDIS_HOST'),
     REDIS_PORT: integerInRange(config, 'REDIS_PORT', 1, 65_535),
     OPENAI_API_KEY: requiredString(config, 'OPENAI_API_KEY'),
+    ANTHROPIC_API_KEY: requiredString(config, 'ANTHROPIC_API_KEY'),
     APP_PORT: integerInRange(
       config,
       'APP_PORT',
@@ -201,6 +220,18 @@ export function validateEnvironment(
       -1,
       1,
       ENV_DEFAULTS.RETRIEVAL_MIN_SIMILARITY,
+    ),
+    GENERATION_MODEL: stringWithDefault(
+      config,
+      'GENERATION_MODEL',
+      ENV_DEFAULTS.GENERATION_MODEL,
+    ),
+    GENERATION_MAX_TOKENS: integerInRange(
+      config,
+      'GENERATION_MAX_TOKENS',
+      1,
+      8192,
+      ENV_DEFAULTS.GENERATION_MAX_TOKENS,
     ),
   };
 }

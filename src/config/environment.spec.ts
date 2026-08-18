@@ -1,4 +1,8 @@
-import { ENV_DEFAULTS, validateEnvironment } from './environment';
+import {
+  ENV_DEFAULTS,
+  validateDatabaseEnvironment,
+  validateEnvironment,
+} from './environment';
 
 const requiredEnvironment = (): Record<string, unknown> => ({
   DB_HOST: 'localhost',
@@ -9,6 +13,7 @@ const requiredEnvironment = (): Record<string, unknown> => ({
   REDIS_HOST: 'localhost',
   REDIS_PORT: '6380',
   OPENAI_API_KEY: 'test-api-key',
+  ANTHROPIC_API_KEY: 'test-anthropic-api-key',
 });
 
 describe('validateEnvironment', () => {
@@ -35,6 +40,8 @@ describe('validateEnvironment', () => {
       EMBEDDING_BATCH_SIZE: '100',
       RETRIEVAL_TOP_K: '25',
       RETRIEVAL_MIN_SIMILARITY: '0.72',
+      GENERATION_MODEL: 'claude-test-model',
+      GENERATION_MAX_TOKENS: '2048',
     });
 
     expect(environment).toMatchObject({
@@ -46,6 +53,8 @@ describe('validateEnvironment', () => {
       EMBEDDING_BATCH_SIZE: 100,
       RETRIEVAL_TOP_K: 25,
       RETRIEVAL_MIN_SIMILARITY: 0.72,
+      GENERATION_MODEL: 'claude-test-model',
+      GENERATION_MAX_TOKENS: 2048,
     });
   });
 
@@ -58,6 +67,7 @@ describe('validateEnvironment', () => {
     'REDIS_HOST',
     'REDIS_PORT',
     'OPENAI_API_KEY',
+    'ANTHROPIC_API_KEY',
   ])('rejects a missing required variable: %s', (key) => {
     const environment = requiredEnvironment();
     delete environment[key];
@@ -78,9 +88,39 @@ describe('validateEnvironment', () => {
     ['EMBEDDING_BATCH_SIZE', '0'],
     ['RETRIEVAL_TOP_K', '101'],
     ['RETRIEVAL_MIN_SIMILARITY', '1.01'],
+    ['GENERATION_MAX_TOKENS', '8193'],
   ])('rejects an out-of-range numeric variable: %s=%s', (key, value) => {
     expect(() =>
       validateEnvironment({ ...requiredEnvironment(), [key]: value }),
     ).toThrow(`Environment validation failed: ${key}`);
+  });
+});
+
+describe('validateDatabaseEnvironment', () => {
+  it('validates DB config without requiring application secrets', () => {
+    const databaseEnvironment = validateDatabaseEnvironment({
+      DB_HOST: 'localhost',
+      DB_PORT: '5434',
+      DB_USERNAME: 'postgres',
+      DB_PASSWORD: 'postgres',
+      DB_DATABASE: 'documind',
+    });
+
+    expect(databaseEnvironment).toEqual({
+      DB_HOST: 'localhost',
+      DB_PORT: 5434,
+      DB_USERNAME: 'postgres',
+      DB_PASSWORD: 'postgres',
+      DB_DATABASE: 'documind',
+    });
+  });
+
+  it('still rejects invalid DB config', () => {
+    expect(() =>
+      validateDatabaseEnvironment({
+        ...requiredEnvironment(),
+        DB_PORT: '0',
+      }),
+    ).toThrow('Environment validation failed: DB_PORT');
   });
 });

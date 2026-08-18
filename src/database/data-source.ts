@@ -2,9 +2,9 @@ import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import { Document } from '../documents/entities/document.entity';
 import { Chunk } from '../documents/entities/chunk.entity';
-import { validateEnvironment } from '../config/environment';
+import { validateDatabaseEnvironment } from '../config/environment';
 
-const environment = validateEnvironment(process.env);
+const environment = validateDatabaseEnvironment(process.env);
 
 export default new DataSource({
   type: 'postgres',
