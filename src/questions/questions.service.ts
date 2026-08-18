@@ -29,23 +29,19 @@ export class QuestionsService {
       return { answer: INSUFFICIENT_CONTEXT_ANSWER, citations: [] };
     }
 
-    const answer = await this.generationService.generate(
+    const generation = await this.generationService.generate(
       normalizedQuestion,
       sources,
     );
-    if (answer === INSUFFICIENT_CONTEXT_ANSWER) {
-      return { answer, citations: [] };
+    if (generation.answer === INSUFFICIENT_CONTEXT_ANSWER) {
+      return { answer: generation.answer, citations: [] };
     }
 
     return {
-      answer,
-      citations: sources.map(
-        ({ documentId, filename, pageNumber, chunkId }) => ({
-          documentId,
-          filename,
-          pageNumber,
-          chunkId,
-        }),
+      answer: generation.answer,
+      citations: this.citationsFromAnswer(
+        generation.answer,
+        generation.sources,
       ),
     };
   }
@@ -60,5 +56,32 @@ export class QuestionsService {
       }
     }
     return [...unique.values()];
+  }
+
+  private citationsFromAnswer(
+    answer: string,
+    sources: RetrievalResultDto[],
+  ): QuestionResponseDto['citations'] {
+    const citations: QuestionResponseDto['citations'] = [];
+    const seen = new Set<number>();
+
+    for (const match of answer.matchAll(/\[Source\s+(\d+)\]/g)) {
+      const sourceIndex = Number(match[1]) - 1;
+      if (
+        !Number.isSafeInteger(sourceIndex) ||
+        sourceIndex < 0 ||
+        sourceIndex >= sources.length ||
+        seen.has(sourceIndex)
+      ) {
+        continue;
+      }
+
+      seen.add(sourceIndex);
+      const { documentId, filename, pageNumber, chunkId } =
+        sources[sourceIndex];
+      citations.push({ documentId, filename, pageNumber, chunkId });
+    }
+
+    return citations;
   }
 }
