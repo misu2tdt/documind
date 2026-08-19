@@ -1,0 +1,25 @@
+{
+  "name": "documind-sample",
+  "description": "Replace filenames/pages with documents ingested in the evaluation database.",
+  "cases": [
+    {
+      "id": "retention-policy",
+      "question": "How long are records retained?",
+      "expectedSources": [
+        {
+          "filename": "employee-handbook.pdf",
+          "pageNumber": 7
+        }
+      ]
+    },
+    {
+      "id": "security-reporting",
+      "question": "Where should a security incident be reported?",
+      "expectedSources": [
+        {
+          "filename": "security-policy.pdf"
+        }
+      ]
+    }
+  ]
+}
