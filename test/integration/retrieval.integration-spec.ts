@@ -10,6 +10,7 @@ import {
 } from '../../src/documents/entities/document.entity';
 import { EmbeddingService } from '../../src/embedding/embedding.service';
 import { RetrievalService } from '../../src/retrieval/retrieval.service';
+import { RetrievalEvaluationRunner } from '../../src/evaluation/retrieval-evaluation.runner';
 
 const TEST_DB_HOST = process.env.TEST_DB_HOST ?? '127.0.0.1';
 const TEST_DB_PORT = Number(process.env.TEST_DB_PORT ?? 5435);
@@ -214,5 +215,36 @@ describe('Retrieval integration', () => {
     expect(results.map((result) => result.chunkId)).toEqual(
       [first.id, second.id].sort(),
     );
+  });
+
+  it('runs retrieval evaluation metrics through the real pgvector path', async () => {
+    const document = await createDocument('evaluation.pdf');
+    const expected = await createChunk(
+      document,
+      0,
+      'expected result',
+      vector([0, 1]),
+    );
+    await createChunk(document, 1, 'lower result', vector([0, 0.8], [1, 0.6]));
+
+    const report = await new RetrievalEvaluationRunner(retrievalService).run(
+      {
+        name: 'integration-evaluation',
+        cases: [
+          {
+            question: 'evaluation question',
+            expectedSources: [
+              { chunkId: expected.id, filename: 'evaluation.pdf' },
+            ],
+          },
+        ],
+      },
+      [1, 2],
+    );
+
+    expect(report.metrics).toEqual([
+      { k: 1, hitRate: 1, recall: 1, mrr: 1 },
+      { k: 2, hitRate: 1, recall: 1, mrr: 1 },
+    ]);
   });
 });
