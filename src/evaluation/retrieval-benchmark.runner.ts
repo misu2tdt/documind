@@ -1,5 +1,9 @@
 import { RetrievalService } from '../retrieval/retrieval.service';
 import {
+  RETRIEVAL_STRATEGIES,
+  RetrievalStrategy,
+} from '../retrieval/retrieval-strategy';
+import {
   RetrievalBenchmarkConfiguration,
   RetrievalBenchmarkReport,
   RetrievalBenchmarkResult,
@@ -19,10 +23,12 @@ export class RetrievalBenchmarkRunner {
     dataset: RetrievalEvaluationDataset,
     topKValues: number[],
     similarityThresholds: number[],
+    strategies: RetrievalStrategy[] = ['vector'],
   ): Promise<RetrievalBenchmarkReport> {
     const configurations = buildBenchmarkConfigurations(
       topKValues,
       similarityThresholds,
+      strategies,
     );
     const results: RetrievalBenchmarkResult[] = [];
 
@@ -48,6 +54,7 @@ export class RetrievalBenchmarkRunner {
 export function buildBenchmarkConfigurations(
   topKValues: number[],
   similarityThresholds: number[],
+  strategies: RetrievalStrategy[] = ['vector'],
 ): RetrievalBenchmarkConfiguration[] {
   const normalizedTopK = normalizeKValues(topKValues);
   const normalizedThresholds = [...new Set(similarityThresholds)].sort(
@@ -62,12 +69,24 @@ export function buildBenchmarkConfigurations(
   ) {
     throw new Error('Similarity thresholds must be numbers between -1 and 1');
   }
+  const normalizedStrategies = [...new Set(strategies)].sort();
+  if (
+    normalizedStrategies.length === 0 ||
+    normalizedStrategies.some(
+      (strategy) => !RETRIEVAL_STRATEGIES.includes(strategy),
+    )
+  ) {
+    throw new Error('Retrieval strategies must be vector or hybrid');
+  }
 
-  return normalizedTopK.flatMap((topK) =>
-    normalizedThresholds.map((minimumSimilarity) => ({
-      topK,
-      minimumSimilarity,
-    })),
+  return normalizedStrategies.flatMap((strategy) =>
+    normalizedTopK.flatMap((topK) =>
+      normalizedThresholds.map((minimumSimilarity) => ({
+        strategy,
+        topK,
+        minimumSimilarity,
+      })),
+    ),
   );
 }
 
@@ -82,7 +101,8 @@ export function rankBenchmarkResults(
         right.metrics.hitRate - left.metrics.hitRate ||
         left.configuration.topK - right.configuration.topK ||
         right.configuration.minimumSimilarity -
-          left.configuration.minimumSimilarity,
+          left.configuration.minimumSimilarity ||
+        left.configuration.strategy.localeCompare(right.configuration.strategy),
     )
     .map((result, index) => ({ ...result, rank: index + 1 }));
 }
@@ -93,11 +113,11 @@ export function formatBenchmarkComparison(
   const lines = [
     `Retrieval benchmark: ${report.dataset}`,
     '',
-    'Rank\tTopK\tThreshold\tHit Rate@K\tRecall@K\tMRR@K',
+    'Rank\tStrategy\tTopK\tThreshold\tHit Rate@K\tRecall@K\tMRR@K',
   ];
   for (const result of report.configurations) {
     lines.push(
-      `${result.rank}\t${result.configuration.topK}\t${result.configuration.minimumSimilarity.toFixed(2)}\t\t${percent(result.metrics.hitRate)}\t\t${percent(result.metrics.recall)}\t\t${result.metrics.mrr.toFixed(4)}`,
+      `${result.rank}\t${result.configuration.strategy}\t${result.configuration.topK}\t${result.configuration.minimumSimilarity.toFixed(2)}\t\t${percent(result.metrics.hitRate)}\t\t${percent(result.metrics.recall)}\t\t${result.metrics.mrr.toFixed(4)}`,
     );
   }
   return lines.join('\n');

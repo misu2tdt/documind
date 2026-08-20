@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { ENV_DEFAULTS, EnvironmentVariables } from '../config/environment';
 import { EmbeddingService } from '../embedding/embedding.service';
+import { RetrievalStrategy } from '../retrieval/retrieval-strategy';
 
 export function createRetrievalConfig(
   topK: number,
@@ -8,6 +9,7 @@ export function createRetrievalConfig(
     'RETRIEVAL_MIN_SIMILARITY',
     ENV_DEFAULTS.RETRIEVAL_MIN_SIMILARITY,
   ),
+  strategy: RetrievalStrategy = ENV_DEFAULTS.RETRIEVAL_STRATEGY,
 ): ConfigService<EnvironmentVariables, true> {
   const values = {
     OPENAI_API_KEY: requiredEnvironmentValue('OPENAI_API_KEY'),
@@ -19,6 +21,7 @@ export function createRetrievalConfig(
     ),
     RETRIEVAL_TOP_K: topK,
     RETRIEVAL_MIN_SIMILARITY: minimumSimilarity,
+    RETRIEVAL_STRATEGY: strategy,
   };
   return {
     get: (key: keyof typeof values) => values[key],

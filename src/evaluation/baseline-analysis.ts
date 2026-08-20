@@ -34,7 +34,10 @@ export function rankBaselineComparisons(
       right.result.metrics.mrr - left.result.metrics.mrr ||
       left.result.configuration.topK - right.result.configuration.topK ||
       right.result.configuration.minimumSimilarity -
-        left.result.configuration.minimumSimilarity,
+        left.result.configuration.minimumSimilarity ||
+      left.result.configuration.strategy.localeCompare(
+        right.result.configuration.strategy,
+      ),
   );
 }
 

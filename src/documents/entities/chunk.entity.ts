@@ -13,6 +13,7 @@ import { Document } from './document.entity';
   unique: true,
 })
 @Index('IDX_chunks_embedding_hnsw_cosine', { synchronize: false })
+@Index('IDX_chunks_content_fts', { synchronize: false })
 @Entity('chunks')
 export class Chunk {
   @PrimaryGeneratedColumn('uuid')

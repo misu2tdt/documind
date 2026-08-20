@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import dataSource from '../database/data-source';
 import { EmbeddingService } from '../embedding/embedding.service';
 import { RetrievalService } from '../retrieval/retrieval.service';
+import { RetrievalStrategy } from '../retrieval/retrieval-strategy';
 import { loadEvaluationDataset } from './dataset';
 import {
   formatBenchmarkComparison,
@@ -19,6 +20,7 @@ interface BenchmarkCliOptions {
   outputPath: string;
   topKValues: number[];
   similarityThresholds: number[];
+  strategies: RetrievalStrategy[];
 }
 
 async function main(): Promise<void> {
@@ -38,9 +40,15 @@ async function main(): Promise<void> {
       const config = createRetrievalConfig(
         configuration.topK,
         configuration.minimumSimilarity,
+        configuration.strategy,
       );
       return new RetrievalService(dataSource, cachedEmbeddingService, config);
-    }).run(dataset, options.topKValues, options.similarityThresholds);
+    }).run(
+      dataset,
+      options.topKValues,
+      options.similarityThresholds,
+      options.strategies,
+    );
 
     await mkdir(dirname(options.outputPath), { recursive: true });
     await writeFile(options.outputPath, `${JSON.stringify(report, null, 2)}\n`);
@@ -63,6 +71,7 @@ function parseOptions(args: string[]): BenchmarkCliOptions {
     similarityThresholds: numberList(
       optionValue(args, '--thresholds') ?? '0.3,0.5,0.7',
     ),
+    strategies: strategyList(optionValue(args, '--strategies') ?? 'vector'),
   };
 }
 
@@ -78,6 +87,10 @@ function optionValue(args: string[], name: string): string | undefined {
 
 function numberList(value: string): number[] {
   return value.split(',').map((item) => Number(item.trim()));
+}
+
+function strategyList(value: string): RetrievalStrategy[] {
+  return value.split(',').map((item) => item.trim() as RetrievalStrategy);
 }
 
 void main().catch((error: unknown) => {

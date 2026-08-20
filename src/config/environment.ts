@@ -18,6 +18,7 @@ export interface EnvironmentVariables {
   EMBEDDING_BATCH_SIZE: number;
   RETRIEVAL_TOP_K: number;
   RETRIEVAL_MIN_SIMILARITY: number;
+  RETRIEVAL_STRATEGY: 'vector' | 'hybrid';
   GENERATION_MODEL: string;
   GENERATION_MAX_TOKENS: number;
   GENERATION_CONTEXT_MAX_CHARS: number;
@@ -39,6 +40,7 @@ export const ENV_DEFAULTS = {
   EMBEDDING_BATCH_SIZE: 50,
   RETRIEVAL_TOP_K: 5,
   RETRIEVAL_MIN_SIMILARITY: 0.5,
+  RETRIEVAL_STRATEGY: 'vector',
   GENERATION_MODEL: 'claude-sonnet-4-6',
   GENERATION_MAX_TOKENS: 1024,
   GENERATION_CONTEXT_MAX_CHARS: 12_000,
@@ -135,6 +137,18 @@ function numberInRange(
   return parsed;
 }
 
+function retrievalStrategy(
+  config: Record<string, unknown>,
+): EnvironmentVariables['RETRIEVAL_STRATEGY'] {
+  const value = config.RETRIEVAL_STRATEGY ?? ENV_DEFAULTS.RETRIEVAL_STRATEGY;
+  if (value !== 'vector' && value !== 'hybrid') {
+    throw new Error(
+      'Environment validation failed: RETRIEVAL_STRATEGY must be vector or hybrid',
+    );
+  }
+  return value;
+}
+
 export function validateDatabaseEnvironment(
   config: Record<string, unknown>,
 ): DatabaseEnvironmentVariables {
@@ -223,6 +237,7 @@ export function validateEnvironment(
       1,
       ENV_DEFAULTS.RETRIEVAL_MIN_SIMILARITY,
     ),
+    RETRIEVAL_STRATEGY: retrievalStrategy(config),
     GENERATION_MODEL: stringWithDefault(
       config,
       'GENERATION_MODEL',

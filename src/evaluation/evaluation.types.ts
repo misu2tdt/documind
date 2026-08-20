@@ -1,4 +1,5 @@
 import { RetrievalResultDto } from '../retrieval/dto/retrieval-result.dto';
+import { RetrievalStrategy } from '../retrieval/retrieval-strategy';
 
 export interface ExpectedSource {
   documentId?: string;
@@ -39,6 +40,7 @@ export interface RetrievalEvaluationReport {
 }
 
 export interface RetrievalBenchmarkConfiguration {
+  strategy: RetrievalStrategy;
   topK: number;
   minimumSimilarity: number;
 }

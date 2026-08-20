@@ -6,6 +6,7 @@ import { EnvironmentVariables } from '../config/environment';
 import { EmbeddingService } from '../embedding/embedding.service';
 import { RetrievalResultDto } from '../retrieval/dto/retrieval-result.dto';
 import { RetrievalService } from '../retrieval/retrieval.service';
+import { RetrievalStrategy } from '../retrieval/retrieval-strategy';
 import {
   createBaselineComparison,
   rankBaselineComparisons,
@@ -30,6 +31,7 @@ interface Options {
   outputPath: string;
   topKValues: number[];
   thresholds: number[];
+  strategies: RetrievalStrategy[];
 }
 
 async function main(): Promise<void> {
@@ -52,6 +54,7 @@ async function main(): Promise<void> {
       dataset,
       options.topKValues,
       options.thresholds,
+      options.strategies,
     );
     const comparisons = await Promise.all(
       benchmark.configurations.map(async (result) => {
@@ -62,6 +65,22 @@ async function main(): Promise<void> {
       }),
     );
     const bestBaseline = rankBaselineComparisons(comparisons)[0];
+    const strategyWinners = options.strategies.map((strategy) => {
+      const winner = rankBaselineComparisons(
+        comparisons.filter(
+          (comparison) => comparison.result.configuration.strategy === strategy,
+        ),
+      )[0];
+      return {
+        strategy,
+        ...winner.result,
+        noSourceAccuracy: winner.noSourceAccuracy,
+        balancedScore: winner.balancedScore,
+        failures: winner.evaluation.cases
+          .filter(isFailure)
+          .map(summarizeFailure),
+      };
+    });
     const positiveMetricWinner = benchmark.configurations[0];
     const failures = bestBaseline.evaluation.cases
       .filter(isFailure)
@@ -75,6 +94,7 @@ async function main(): Promise<void> {
         balancedScore: bestBaseline.balancedScore,
       },
       bestEvaluation: bestBaseline.evaluation,
+      strategyWinners,
       failures,
     };
 
@@ -97,6 +117,11 @@ async function main(): Promise<void> {
     for (const failure of failures.slice(0, 5)) {
       console.log(`- ${failure.id}: ${failure.reason}`);
     }
+    for (const winner of strategyWinners) {
+      console.log(
+        `${winner.strategy} winner: ${configurationLabel(winner)}; balanced=${(winner.balancedScore * 100).toFixed(2)}%; failures=${winner.failures.length}`,
+      );
+    }
     console.log(`\nJSON report: ${options.outputPath}`);
   } finally {
     if (dataSource.isInitialized) await dataSource.destroy();
@@ -104,7 +129,7 @@ async function main(): Promise<void> {
 }
 
 function configurationLabel(result: RetrievalBenchmarkResult): string {
-  return `topK=${result.configuration.topK}, threshold=${result.configuration.minimumSimilarity.toFixed(2)}`;
+  return `${result.configuration.strategy}, topK=${result.configuration.topK}, threshold=${result.configuration.minimumSimilarity.toFixed(2)}`;
 }
 
 function createConfig(
@@ -114,7 +139,9 @@ function createConfig(
     get: (key: keyof EnvironmentVariables) =>
       key === 'RETRIEVAL_TOP_K'
         ? configuration.topK
-        : configuration.minimumSimilarity,
+        : key === 'RETRIEVAL_MIN_SIMILARITY'
+          ? configuration.minimumSimilarity
+          : configuration.strategy,
   } as unknown as ConfigService<EnvironmentVariables, true>;
 }
 
@@ -169,6 +196,9 @@ function parseOptions(args: string[]): Options {
     thresholds: numberList(
       optionValue(args, '--thresholds') ?? '0,0.1,0.2,0.3',
     ),
+    strategies: strategyList(
+      optionValue(args, '--strategies') ?? 'vector,hybrid',
+    ),
   };
 }
 
@@ -183,6 +213,10 @@ function optionValue(args: string[], name: string): string | undefined {
 
 function numberList(value: string): number[] {
   return value.split(',').map((item) => Number(item.trim()));
+}
+
+function strategyList(value: string): RetrievalStrategy[] {
+  return value.split(',').map((item) => item.trim() as RetrievalStrategy);
 }
 
 void main().catch((error: unknown) => {
