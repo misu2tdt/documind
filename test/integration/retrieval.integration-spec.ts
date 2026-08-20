@@ -14,6 +14,7 @@ import { RetrievalService } from '../../src/retrieval/retrieval.service';
 import { RetrievalStrategy } from '../../src/retrieval/retrieval-strategy';
 import { RetrievalEvaluationRunner } from '../../src/evaluation/retrieval-evaluation.runner';
 import { RetrievalBenchmarkRunner } from '../../src/evaluation/retrieval-benchmark.runner';
+import { CandidateAnalysisRunner } from '../../src/evaluation/candidate-analysis';
 
 const TEST_DB_HOST = process.env.TEST_DB_HOST ?? '127.0.0.1';
 const TEST_DB_PORT = Number(process.env.TEST_DB_PORT ?? 5435);
@@ -297,6 +298,66 @@ describe('Retrieval integration', () => {
         (result) => result.documentId === includedDocument.id,
       ),
     ).toBe(true);
+  });
+
+  it('diagnoses candidate removal before ranking', async () => {
+    const document = await createDocument('policy.pdf');
+    const relevant = await createChunk(
+      document,
+      0,
+      'Mandatory payroll access applies.',
+      vector([1, 1]),
+    );
+    const embeddingService = { embedOne } as unknown as EmbeddingService;
+    const report = await new CandidateAnalysisRunner(
+      dataSource,
+      embeddingService,
+      (strategy, minimumSimilarity) =>
+        createRetrievalService(minimumSimilarity, strategy),
+    ).run(
+      {
+        name: 'candidate-diagnostic',
+        cases: [
+          {
+            id: 'guarded-match',
+            question: 'mandatory systems control',
+            expectedSources: [{ chunkId: relevant.id, filename: 'policy.pdf' }],
+          },
+        ],
+      },
+      [5],
+      [-1, 0.75],
+      { topK: 3, minimumSimilarity: 0.75 },
+    );
+
+    expect(
+      report.candidateRecall.map((result) => ({
+        strategy: result.strategy,
+        threshold: result.minimumSimilarity,
+        recall: result.metrics[0]?.recall,
+      })),
+    ).toEqual([
+      { strategy: 'vector', threshold: -1, recall: 1 },
+      { strategy: 'vector', threshold: 0.75, recall: 0 },
+      { strategy: 'hybrid', threshold: -1, recall: 1 },
+      { strategy: 'hybrid', threshold: 0.75, recall: 0 },
+    ]);
+    expect(report.failures).toEqual([
+      expect.objectContaining({
+        id: 'guarded-match',
+        cause: 'candidate-generation',
+        relevant: [
+          expect.objectContaining({
+            vectorRank: 1,
+            rawLexicalRank: 1,
+            guardedLexicalRank: null,
+            hybridRank: null,
+            removedByThreshold: true,
+            removedByLexicalGuard: true,
+          }),
+        ],
+      }),
+    ]);
   });
 
   it('runs retrieval evaluation metrics through the real pgvector path', async () => {
