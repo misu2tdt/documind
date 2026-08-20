@@ -56,6 +56,23 @@ describe('retrieval metrics', () => {
     ]);
   });
 
+  it('excludes no-relevant-source cases from positive retrieval metrics', () => {
+    const noSourceCase: EvaluationCaseRun = {
+      question: 'unsupported question',
+      expectedSources: [],
+      retrieved: [result('false-positive', 'a.pdf', 1)],
+    };
+
+    expect(calculateRetrievalMetrics([...cases, noSourceCase], [1])).toEqual([
+      {
+        k: 1,
+        hitRate: 1 / 3,
+        recall: 1 / 3,
+        mrr: 1 / 3,
+      },
+    ]);
+  });
+
   it('normalizes K values deterministically', () => {
     expect(normalizeKValues([5, 1, 5, 3])).toEqual([1, 3, 5]);
   });
