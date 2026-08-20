@@ -133,3 +133,40 @@ The direct MFA question and paraphrased proof-of-purchase question still fell
 below the vector threshold and lacked two lexical term matches. This is enough
 evidence to retain hybrid as an opt-in strategy, but not to change the
 production default based on this small synthetic corpus alone.
+
+## Phase 4E candidate analysis
+
+Candidate diagnostics use the same isolated corpus and production retrieval
+path while recording broad vector ranks, similarities, raw and guarded lexical
+ranks, query-term overlap, and final hybrid ranks. Run:
+
+```bash
+npm run eval:baseline:candidates
+```
+
+Across K values 5, 10, and 20, candidate recall was unchanged at every K:
+
+| Strategy | Threshold | Recall@5 | Recall@10 | Recall@20 |
+| -------- | --------: | -------: | --------: | --------: |
+| Vector   |     -1.00 |  100.00% |   100.00% |   100.00% |
+| Vector   |      0.00 |  100.00% |   100.00% |   100.00% |
+| Vector   |      0.10 |   90.91% |    90.91% |    90.91% |
+| Vector   |      0.20 |   86.36% |    86.36% |    86.36% |
+| Hybrid   |     -1.00 |  100.00% |   100.00% |   100.00% |
+| Hybrid   |      0.00 |  100.00% |   100.00% |   100.00% |
+| Hybrid   |      0.10 |   95.45% |    95.45% |    95.45% |
+| Hybrid   |      0.20 |   90.91% |    90.91% |    90.91% |
+
+The remaining topK=3, threshold=0.20 failures are candidate-generation
+failures, not ranking failures. Both relevant chunks rank first in the broad
+vector list but have similarities below 0.20. The MFA chunk has one of three
+lexical query terms and is removed by the two-term guard. The proof-of-purchase
+chunk has two of five terms, but the current lexical query construction feeds
+already-stemmed English lexemes through the English tsquery parser a second
+time. That generic double-stemming bug rejects the lexical match before the
+guard. Phase 4E records the bug without changing retrieval behavior.
+
+Because relaxed candidate recall is already 100%, a reranker cannot address
+the current misses at the selected threshold: the chunks never reach it. Fixing
+the generic lexical query construction and evaluating query expansion or
+threshold calibration should precede reranking experiments.
