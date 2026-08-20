@@ -45,3 +45,61 @@ npm run eval:retrieval:benchmark -- --dataset evaluation/datasets/sample.json --
 Questions are embedded once and cached for every configuration in a run. Results
 are ranked by Recall@K, MRR@K, Hit Rate@K, then smaller topK and higher threshold
 for deterministic quality ties. The benchmark never changes production defaults.
+
+## Phase 4C reproducible baseline
+
+The Phase 4C corpus contains five synthetic policy documents, 20 labeled page
+chunks, and 25 questions covering direct lookup, paraphrases, repeated terms,
+multi-source answers, and questions with no relevant source. Fixed document and
+chunk UUIDs keep source labels stable.
+
+Start the isolated PostgreSQL + pgvector test database, run migrations and seed
+the corpus, then benchmark it:
+
+```bash
+npm run test:integration:db:up
+npm run eval:baseline:setup
+npm run eval:baseline:benchmark
+```
+
+The setup command refuses databases whose name does not end in `_test` and also
+refuses the development port `5434`. Override its isolated defaults with
+`TEST_DB_HOST`, `TEST_DB_PORT`, `TEST_DB_USERNAME`, `TEST_DB_PASSWORD`, and
+`TEST_DB_DATABASE` when needed. Seeding is idempotent and clears documents from
+that dedicated test database before inserting the fixed corpus, preventing old
+integration fixtures from contaminating benchmark results.
+
+The baseline uses a deterministic evaluation-only hashed bag-of-words embedding
+with a small, explicit paraphrase map. It always emits 1536-dimensional vectors.
+This mocks the external embedding provider while keeping migrations, vector
+persistence, cosine search, filtering, thresholds, and ranking on the real
+production retrieval path. It is intentionally a stable architecture baseline,
+not a claim about OpenAI embedding quality.
+
+Positive Hit Rate, Recall, and MRR exclude the three no-relevant-source cases;
+those are reported separately as no-source accuracy. The JSON report includes
+the full ranked grid, best-configuration results, and failure details under
+`evaluation-results/phase-4c-baseline.json`.
+
+### Recorded baseline
+
+The Phase 4C run over `topK=1,3,5,8` and thresholds `0,0.1,0.2,0.3` produced:
+
+| Selection             | topK | Threshold | Hit Rate |  Recall |    MRR | No-source accuracy |
+| --------------------- | ---: | --------: | -------: | ------: | -----: | -----------------: |
+| Positive metrics only |    5 |      0.00 |  100.00% | 100.00% | 0.9432 |              0.00% |
+| Balanced baseline     |    3 |      0.20 |   86.36% |  86.36% | 0.8409 |            100.00% |
+
+The balanced selection maximizes the mean of Recall@K and no-source accuracy;
+MRR, smaller topK, and higher threshold provide deterministic tie-breaks. Its
+three misses were the direct MFA query, the paraphrased proof-of-purchase query,
+and the paraphrased two-factor query. All fell below the 0.20 threshold. This
+captures the main baseline tradeoff: a permissive threshold recovers all labeled
+sources but cannot reject unsupported questions, while the guarded threshold
+loses short or paraphrased matches.
+
+Stop and remove the isolated test database after use:
+
+```bash
+npm run test:integration:db:down
+```
