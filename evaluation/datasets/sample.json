@@ -20,6 +20,25 @@
           "filename": "security-policy.pdf"
         }
       ]
+    },
+    {
+      "id": "remote-access",
+      "question": "What controls are required for remote access?",
+      "expectedSources": [
+        {
+          "filename": "security-policy.pdf",
+          "pageNumber": 12
+        }
+      ]
+    },
+    {
+      "id": "leave-approval",
+      "question": "Who approves employee leave requests?",
+      "expectedSources": [
+        {
+          "filename": "employee-handbook.pdf"
+        }
+      ]
     }
   ]
 }

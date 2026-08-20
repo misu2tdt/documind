@@ -33,3 +33,15 @@ npm run eval:retrieval -- --dataset evaluation/datasets/sample.json --k 1,3,5 --
 The console prints Hit Rate@K, Recall@K, and MRR@K. The output file contains the
 same metrics plus per-case retrieved results as JSON. Generated reports under
 `evaluation-results/` are ignored by Git.
+
+## Configuration benchmark
+
+Benchmark a deterministic grid of topK values and minimum similarity thresholds:
+
+```bash
+npm run eval:retrieval:benchmark -- --dataset evaluation/datasets/sample.json --top-k 1,3,5 --thresholds 0.3,0.5,0.7 --output evaluation-results/benchmark.json
+```
+
+Questions are embedded once and cached for every configuration in a run. Results
+are ranked by Recall@K, MRR@K, Hit Rate@K, then smaller topK and higher threshold
+for deterministic quality ties. The benchmark never changes production defaults.

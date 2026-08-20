@@ -37,3 +37,20 @@ export interface RetrievalEvaluationReport {
   metrics: RetrievalMetricSummary[];
   cases: EvaluationCaseRun[];
 }
+
+export interface RetrievalBenchmarkConfiguration {
+  topK: number;
+  minimumSimilarity: number;
+}
+
+export interface RetrievalBenchmarkResult {
+  rank: number;
+  configuration: RetrievalBenchmarkConfiguration;
+  metrics: RetrievalMetricSummary;
+}
+
+export interface RetrievalBenchmarkReport {
+  dataset: string;
+  generatedAt: string;
+  configurations: RetrievalBenchmarkResult[];
+}

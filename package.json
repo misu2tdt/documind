@@ -16,6 +16,7 @@
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
     "migration:show": "typeorm-ts-node-commonjs migration:show -d src/database/data-source.ts",
     "eval:retrieval": "ts-node src/evaluation/cli.ts",
+    "eval:retrieval:benchmark": "ts-node src/evaluation/benchmark-cli.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
