@@ -65,6 +65,16 @@ async function main(): Promise<void> {
       }),
     );
     const bestBaseline = rankBaselineComparisons(comparisons)[0];
+    const balancedConfigurations = rankBaselineComparisons(comparisons).map(
+      (comparison) => ({
+        ...comparison.result,
+        noSourceAccuracy: comparison.noSourceAccuracy,
+        balancedScore: comparison.balancedScore,
+        failures: comparison.evaluation.cases
+          .filter(isFailure)
+          .map(summarizeFailure),
+      }),
+    );
     const strategyWinners = options.strategies.map((strategy) => {
       const winner = rankBaselineComparisons(
         comparisons.filter(
@@ -94,6 +104,7 @@ async function main(): Promise<void> {
         balancedScore: bestBaseline.balancedScore,
       },
       bestEvaluation: bestBaseline.evaluation,
+      balancedConfigurations,
       strategyWinners,
       failures,
     };

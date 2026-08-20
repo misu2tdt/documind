@@ -150,7 +150,7 @@ export class RetrievalService {
        ), lexical_query AS (
          SELECT
            terms,
-           to_tsquery('english', expression) AS query
+           to_tsquery('simple', expression) AS query
          FROM lexical_terms
        )
        SELECT
