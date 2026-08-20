@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { EnvironmentVariables } from '../../src/config/environment';
 import { EnablePgvector20260804201511 } from '../../src/database/migrations/20260804201511-EnablePgvector';
 import { CreateDocumentAndChunkSchema1786813200000 } from '../../src/database/migrations/1786813200000-CreateDocumentAndChunkSchema';
+import { AddChunkContentSearchIndex1787248800000 } from '../../src/database/migrations/1787248800000-AddChunkContentSearchIndex';
 import { Chunk } from '../../src/documents/entities/chunk.entity';
 import {
   Document,
@@ -10,6 +11,7 @@ import {
 } from '../../src/documents/entities/document.entity';
 import { EmbeddingService } from '../../src/embedding/embedding.service';
 import { RetrievalService } from '../../src/retrieval/retrieval.service';
+import { RetrievalStrategy } from '../../src/retrieval/retrieval-strategy';
 import { RetrievalEvaluationRunner } from '../../src/evaluation/retrieval-evaluation.runner';
 import { RetrievalBenchmarkRunner } from '../../src/evaluation/retrieval-benchmark.runner';
 
@@ -55,6 +57,7 @@ describe('Retrieval integration', () => {
       migrations: [
         EnablePgvector20260804201511,
         CreateDocumentAndChunkSchema1786813200000,
+        AddChunkContentSearchIndex1787248800000,
       ],
       synchronize: false,
       installExtensions: false,
@@ -77,12 +80,17 @@ describe('Retrieval integration', () => {
     if (dataSource?.isInitialized) await dataSource.destroy();
   });
 
-  function createRetrievalService(minimumSimilarity = 0.5): RetrievalService {
+  function createRetrievalService(
+    minimumSimilarity = 0.5,
+    strategy: RetrievalStrategy = 'vector',
+  ): RetrievalService {
     const embeddingService = { embedOne } as unknown as EmbeddingService;
     const configService = {
-      get: jest.fn((key: keyof EnvironmentVariables) =>
-        key === 'RETRIEVAL_TOP_K' ? 5 : minimumSimilarity,
-      ),
+      get: jest.fn((key: keyof EnvironmentVariables) => {
+        if (key === 'RETRIEVAL_TOP_K') return 5;
+        if (key === 'RETRIEVAL_MIN_SIMILARITY') return minimumSimilarity;
+        return strategy;
+      }),
     } as unknown as ConfigService<EnvironmentVariables, true>;
     return new RetrievalService(dataSource, embeddingService, configService);
   }
@@ -154,6 +162,19 @@ describe('Retrieval integration', () => {
     expect(results[1]?.similarity).toBeCloseTo(0.8);
   });
 
+  it('creates the PostgreSQL full-text chunk index', async () => {
+    const indexes = await dataSource.query<Array<{ indexdef: string }>>(
+      `SELECT indexdef
+       FROM pg_indexes
+       WHERE schemaname = current_schema()
+         AND indexname = 'IDX_chunks_content_fts'`,
+    );
+
+    expect(indexes).toHaveLength(1);
+    expect(indexes[0]?.indexdef).toContain('USING gin');
+    expect(indexes[0]?.indexdef).toContain("to_tsvector('english'::regconfig");
+  });
+
   it('filters results by documentId before ranking', async () => {
     const firstDocument = await createDocument('first.pdf');
     const secondDocument = await createDocument('second.pdf');
@@ -218,6 +239,66 @@ describe('Retrieval integration', () => {
     );
   });
 
+  it('recovers lexical matches below the vector threshold and preserves filters', async () => {
+    const includedDocument = await createDocument('included.pdf');
+    const otherDocument = await createDocument('other.pdf');
+    const processingDocument = await createDocument(
+      'processing.pdf',
+      DocumentStatus.PROCESSING,
+    );
+    const first = await createChunk(
+      includedDocument,
+      0,
+      'Payroll access is mandatory.',
+      vector([1, 1]),
+    );
+    const second = await createChunk(
+      includedDocument,
+      1,
+      'Mandatory payroll controls apply.',
+      vector([1, 1]),
+    );
+    await createChunk(
+      otherDocument,
+      0,
+      'Mandatory payroll rules elsewhere.',
+      vector([1, 1]),
+    );
+    await createChunk(
+      processingDocument,
+      0,
+      'Mandatory payroll work in progress.',
+      vector([0, 1]),
+    );
+    await createChunk(
+      includedDocument,
+      2,
+      'Mandatory payroll without an embedding.',
+      null,
+    );
+
+    const vectorResults = await createRetrievalService(0.75).search(
+      'mandatory payroll',
+      10,
+      includedDocument.id,
+    );
+    const hybridResults = await createRetrievalService(0.75, 'hybrid').search(
+      'mandatory payroll',
+      10,
+      includedDocument.id,
+    );
+
+    expect(vectorResults).toEqual([]);
+    expect(hybridResults.map((result) => result.chunkId)).toEqual(
+      [first.id, second.id].sort(),
+    );
+    expect(
+      hybridResults.every(
+        (result) => result.documentId === includedDocument.id,
+      ),
+    ).toBe(true);
+  });
+
   it('runs retrieval evaluation metrics through the real pgvector path', async () => {
     const document = await createDocument('evaluation.pdf');
     const expected = await createChunk(
@@ -266,7 +347,10 @@ describe('Retrieval integration', () => {
     );
 
     const report = await new RetrievalBenchmarkRunner((configuration) =>
-      createRetrievalService(configuration.minimumSimilarity),
+      createRetrievalService(
+        configuration.minimumSimilarity,
+        configuration.strategy,
+      ),
     ).run(
       {
         name: 'deterministic-pgvector-benchmark',
@@ -288,7 +372,11 @@ describe('Retrieval integration', () => {
     expect(report.configurations).toEqual([
       {
         rank: 1,
-        configuration: { topK: 3, minimumSimilarity: 0.5 },
+        configuration: {
+          strategy: 'vector',
+          topK: 3,
+          minimumSimilarity: 0.5,
+        },
         metrics: {
           k: 3,
           hitRate: 1,
@@ -298,17 +386,29 @@ describe('Retrieval integration', () => {
       },
       {
         rank: 2,
-        configuration: { topK: 3, minimumSimilarity: 0.8 },
+        configuration: {
+          strategy: 'vector',
+          topK: 3,
+          minimumSimilarity: 0.8,
+        },
         metrics: { k: 3, hitRate: 0.5, recall: 0.5, mrr: 0.25 },
       },
       {
         rank: 3,
-        configuration: { topK: 1, minimumSimilarity: 0.8 },
+        configuration: {
+          strategy: 'vector',
+          topK: 1,
+          minimumSimilarity: 0.8,
+        },
         metrics: { k: 1, hitRate: 0, recall: 0, mrr: 0 },
       },
       {
         rank: 4,
-        configuration: { topK: 1, minimumSimilarity: 0.5 },
+        configuration: {
+          strategy: 'vector',
+          topK: 1,
+          minimumSimilarity: 0.5,
+        },
         metrics: { k: 1, hitRate: 0, recall: 0, mrr: 0 },
       },
     ]);

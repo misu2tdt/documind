@@ -40,6 +40,7 @@ describe('validateEnvironment', () => {
       EMBEDDING_BATCH_SIZE: '100',
       RETRIEVAL_TOP_K: '25',
       RETRIEVAL_MIN_SIMILARITY: '0.72',
+      RETRIEVAL_STRATEGY: 'hybrid',
       GENERATION_MODEL: 'claude-test-model',
       GENERATION_MAX_TOKENS: '2048',
       GENERATION_CONTEXT_MAX_CHARS: '16000',
@@ -54,6 +55,7 @@ describe('validateEnvironment', () => {
       EMBEDDING_BATCH_SIZE: 100,
       RETRIEVAL_TOP_K: 25,
       RETRIEVAL_MIN_SIMILARITY: 0.72,
+      RETRIEVAL_STRATEGY: 'hybrid',
       GENERATION_MODEL: 'claude-test-model',
       GENERATION_MAX_TOKENS: 2048,
       GENERATION_CONTEXT_MAX_CHARS: 16_000,
@@ -96,6 +98,15 @@ describe('validateEnvironment', () => {
     expect(() =>
       validateEnvironment({ ...requiredEnvironment(), [key]: value }),
     ).toThrow(`Environment validation failed: ${key}`);
+  });
+
+  it('rejects an unsupported retrieval strategy', () => {
+    expect(() =>
+      validateEnvironment({
+        ...requiredEnvironment(),
+        RETRIEVAL_STRATEGY: 'rerank',
+      }),
+    ).toThrow('Environment validation failed: RETRIEVAL_STRATEGY');
   });
 });
 

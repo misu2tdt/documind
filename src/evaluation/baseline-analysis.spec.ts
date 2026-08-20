@@ -16,7 +16,11 @@ function comparison(
 ) {
   const result: RetrievalBenchmarkResult = {
     rank: 1,
-    configuration: { topK, minimumSimilarity: threshold },
+    configuration: {
+      strategy: 'vector',
+      topK,
+      minimumSimilarity: threshold,
+    },
     metrics: { k: topK, hitRate: recall, recall, mrr: recall },
   };
   const cases: EvaluationCaseRun[] = [

@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import { EnvironmentVariables } from '../../src/config/environment';
 import { EnablePgvector20260804201511 } from '../../src/database/migrations/20260804201511-EnablePgvector';
 import { CreateDocumentAndChunkSchema1786813200000 } from '../../src/database/migrations/1786813200000-CreateDocumentAndChunkSchema';
+import { AddChunkContentSearchIndex1787248800000 } from '../../src/database/migrations/1787248800000-AddChunkContentSearchIndex';
 import { Chunk } from '../../src/documents/entities/chunk.entity';
 import {
   Document,
@@ -55,6 +56,7 @@ describe('Ingestion persistence integration', () => {
       migrations: [
         EnablePgvector20260804201511,
         CreateDocumentAndChunkSchema1786813200000,
+        AddChunkContentSearchIndex1787248800000,
       ],
       synchronize: false,
       installExtensions: false,

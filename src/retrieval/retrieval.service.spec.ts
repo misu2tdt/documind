@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { EnvironmentVariables } from '../config/environment';
 import { EmbeddingService } from '../embedding/embedding.service';
 import { RetrievalService } from './retrieval.service';
+import { RetrievalStrategy } from './retrieval-strategy';
 
 describe('RetrievalService', () => {
   const query = jest.fn();
@@ -13,16 +14,21 @@ describe('RetrievalService', () => {
     query.mockReset();
     embedOne.mockReset();
 
+    service = createService('vector');
+  });
+
+  function createService(strategy: RetrievalStrategy): RetrievalService {
     const dataSource = { query } as unknown as DataSource;
     const embeddingService = { embedOne } as unknown as EmbeddingService;
     const configService = {
-      get: jest.fn((key: keyof EnvironmentVariables) =>
-        key === 'RETRIEVAL_TOP_K' ? 5 : 0.5,
-      ),
+      get: jest.fn((key: keyof EnvironmentVariables) => {
+        if (key === 'RETRIEVAL_TOP_K') return 5;
+        if (key === 'RETRIEVAL_MIN_SIMILARITY') return 0.5;
+        return strategy;
+      }),
     } as unknown as ConfigService<EnvironmentVariables, true>;
-
-    service = new RetrievalService(dataSource, embeddingService, configService);
-  });
+    return new RetrievalService(dataSource, embeddingService, configService);
+  }
 
   it('embeds the query and searches with the configured topK', async () => {
     embedOne.mockResolvedValue([1, 0, 0]);
@@ -90,6 +96,35 @@ describe('RetrievalService', () => {
     expect(embedOne).toHaveBeenCalledWith('useful query');
   });
 
+  it('fuses vector and lexical rankings for hybrid retrieval', async () => {
+    service = createService('hybrid');
+    embedOne.mockResolvedValue([1, 0, 0]);
+    const vectorOnly = result('vector-only', 0.9);
+    const shared = result('shared', 0.8);
+    const lexicalOnly = result('lexical-only', 0.2);
+    query.mockResolvedValueOnce([vectorOnly, shared]).mockResolvedValueOnce([
+      { ...shared, rank: '0.4' },
+      { ...lexicalOnly, rank: '0.3' },
+    ]);
+
+    await expect(service.search('hybrid query', 3)).resolves.toEqual([
+      shared,
+      vectorOnly,
+      lexicalOnly,
+    ]);
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(query).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('c.embedding <=> $1::vector'),
+      [JSON.stringify([1, 0, 0]), 20, 0.5, 'completed'],
+    );
+    expect(query).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("to_tsvector('english', c.content)"),
+      ['hybrid query', 20, 'completed', JSON.stringify([1, 0, 0])],
+    );
+  });
+
   it.each(['', '   ', '\n\t'])('rejects an empty query: %j', async (value) => {
     await expect(service.search(value)).rejects.toThrow(
       'Query must not be empty',
@@ -109,3 +144,14 @@ describe('RetrievalService', () => {
     },
   );
 });
+
+function result(chunkId: string, similarity: number) {
+  return {
+    chunkId,
+    documentId: 'document',
+    filename: 'guide.pdf',
+    pageNumber: 1,
+    content: chunkId,
+    similarity,
+  };
+}

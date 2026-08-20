@@ -52,10 +52,10 @@ describe('RetrievalBenchmarkRunner', () => {
 
     expect(report.configurations.map((result) => result.configuration)).toEqual(
       [
-        { topK: 2, minimumSimilarity: 0.5 },
-        { topK: 1, minimumSimilarity: 0.9 },
-        { topK: 1, minimumSimilarity: 0.5 },
-        { topK: 2, minimumSimilarity: 0.9 },
+        { strategy: 'vector', topK: 2, minimumSimilarity: 0.5 },
+        { strategy: 'vector', topK: 1, minimumSimilarity: 0.9 },
+        { strategy: 'vector', topK: 1, minimumSimilarity: 0.5 },
+        { strategy: 'vector', topK: 2, minimumSimilarity: 0.9 },
       ],
     );
     expect(report.configurations[0]?.metrics).toEqual({
@@ -68,10 +68,19 @@ describe('RetrievalBenchmarkRunner', () => {
 
   it('builds unique configurations in stable numeric order', () => {
     expect(buildBenchmarkConfigurations([3, 1, 3], [0.7, 0.5, 0.7])).toEqual([
-      { topK: 1, minimumSimilarity: 0.5 },
-      { topK: 1, minimumSimilarity: 0.7 },
-      { topK: 3, minimumSimilarity: 0.5 },
-      { topK: 3, minimumSimilarity: 0.7 },
+      { strategy: 'vector', topK: 1, minimumSimilarity: 0.5 },
+      { strategy: 'vector', topK: 1, minimumSimilarity: 0.7 },
+      { strategy: 'vector', topK: 3, minimumSimilarity: 0.5 },
+      { strategy: 'vector', topK: 3, minimumSimilarity: 0.7 },
+    ]);
+  });
+
+  it('builds configurations for vector and hybrid strategies', () => {
+    expect(
+      buildBenchmarkConfigurations([3], [0.2], ['vector', 'hybrid']),
+    ).toEqual([
+      { strategy: 'hybrid', topK: 3, minimumSimilarity: 0.2 },
+      { strategy: 'vector', topK: 3, minimumSimilarity: 0.2 },
     ]);
   });
 
@@ -104,7 +113,7 @@ function benchmarkResult(
 ): RetrievalBenchmarkResult {
   return {
     rank: 0,
-    configuration: { topK, minimumSimilarity },
+    configuration: { strategy: 'vector', topK, minimumSimilarity },
     metrics: { k: topK, hitRate, recall, mrr },
   };
 }
