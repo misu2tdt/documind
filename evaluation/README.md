@@ -103,3 +103,33 @@ Stop and remove the isolated test database after use:
 ```bash
 npm run test:integration:db:down
 ```
+
+## Phase 4D hybrid retrieval
+
+Hybrid retrieval combines the existing thresholded cosine-similarity ranking
+with PostgreSQL English full-text search over chunk content. Lexical candidates
+must match at least two distinct query lexemes when the query contains two or
+more. The two ranked lists are combined with equal-weight reciprocal rank
+fusion (RRF, rank constant 60), followed by stable lexical-rank, vector-rank,
+and chunk-ID tie-breaks.
+
+`RETRIEVAL_STRATEGY` accepts `vector` or `hybrid`; its production default
+remains `vector`. Evaluation can compare strategies explicitly:
+
+```bash
+npm run eval:baseline:benchmark -- --strategies vector,hybrid --output evaluation-results/phase-4d-hybrid.json
+```
+
+The Phase 4D run used the same 25 questions, `topK=1,3,5,8`, and thresholds
+`0,0.1,0.2,0.3`. The best balanced configuration for each strategy was:
+
+| Strategy | topK | Threshold | Hit Rate | Recall |    MRR | No-source accuracy | Balanced score |
+| -------- | ---: | --------: | -------: | -----: | -----: | -----------------: | -------------: |
+| Vector   |    3 |      0.20 |   86.36% | 86.36% | 0.8409 |            100.00% |         93.18% |
+| Hybrid   |    3 |      0.20 |   90.91% | 90.91% | 0.9091 |            100.00% |         95.45% |
+
+Hybrid retrieval recovered the paraphrased two-factor-authentication case.
+The direct MFA question and paraphrased proof-of-purchase question still fell
+below the vector threshold and lacked two lexical term matches. This is enough
+evidence to retain hybrid as an opt-in strategy, but not to change the
+production default based on this small synthetic corpus alone.
