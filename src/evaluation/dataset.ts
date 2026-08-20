@@ -33,13 +33,8 @@ function validateCase(value: unknown, index: number): RetrievalEvaluationCase {
   ) {
     throw new Error(`Evaluation case ${index + 1} must have a question`);
   }
-  if (
-    !Array.isArray(value.expectedSources) ||
-    value.expectedSources.length === 0
-  ) {
-    throw new Error(
-      `Evaluation case ${index + 1} must have at least one expected source`,
-    );
+  if (!Array.isArray(value.expectedSources)) {
+    throw new Error(`Evaluation case ${index + 1} must define expectedSources`);
   }
 
   return {

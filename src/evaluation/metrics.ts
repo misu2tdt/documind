@@ -41,12 +41,19 @@ export function calculateRetrievalMetrics(
     throw new Error('At least one evaluation case is required');
   }
 
+  const relevantCases = cases.filter(
+    (evaluationCase) => evaluationCase.expectedSources.length > 0,
+  );
+  if (relevantCases.length === 0) {
+    throw new Error('At least one case with an expected source is required');
+  }
+
   return normalizeKValues(kValues).map((k) => {
     let hits = 0;
     let recallTotal = 0;
     let reciprocalRankTotal = 0;
 
-    for (const evaluationCase of cases) {
+    for (const evaluationCase of relevantCases) {
       const retrieved = evaluationCase.retrieved.slice(0, k);
       const matchedExpected = evaluationCase.expectedSources.filter(
         (expected) =>
@@ -67,9 +74,9 @@ export function calculateRetrievalMetrics(
 
     return {
       k,
-      hitRate: hits / cases.length,
-      recall: recallTotal / cases.length,
-      mrr: reciprocalRankTotal / cases.length,
+      hitRate: hits / relevantCases.length,
+      recall: recallTotal / relevantCases.length,
+      mrr: reciprocalRankTotal / relevantCases.length,
     };
   });
 }

@@ -17,6 +17,8 @@
     "migration:show": "typeorm-ts-node-commonjs migration:show -d src/database/data-source.ts",
     "eval:retrieval": "ts-node src/evaluation/cli.ts",
     "eval:retrieval:benchmark": "ts-node src/evaluation/benchmark-cli.ts",
+    "eval:baseline:setup": "ts-node src/evaluation/baseline-setup-cli.ts",
+    "eval:baseline:benchmark": "ts-node src/evaluation/baseline-benchmark-cli.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",

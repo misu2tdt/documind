@@ -1,0 +1,215 @@
+{
+  "name": "documind-phase-4c-corpus",
+  "documents": [
+    {
+      "id": "40000000-0000-4000-8000-000000000001",
+      "filename": "employee-handbook.pdf",
+      "pages": [
+        {
+          "pageNumber": 1,
+          "chunks": [
+            {
+              "id": "41000000-0000-4000-8000-000000000001",
+              "content": "Annual leave. Full-time employees receive 20 days of paid annual leave per calendar year. Requests longer than three days need manager approval at least ten business days in advance."
+            }
+          ]
+        },
+        {
+          "pageNumber": 2,
+          "chunks": [
+            {
+              "id": "41000000-0000-4000-8000-000000000002",
+              "content": "Remote work. Employees may work remotely up to three days per week. Everyone must be available during the core collaboration hours of 10:00 to 15:00 local time."
+            }
+          ]
+        },
+        {
+          "pageNumber": 3,
+          "chunks": [
+            {
+              "id": "41000000-0000-4000-8000-000000000003",
+              "content": "Business expenses. An itemized receipt is required for every expense over 25 dollars. Reimbursement claims must be submitted within 30 calendar days of purchase."
+            }
+          ]
+        },
+        {
+          "pageNumber": 4,
+          "chunks": [
+            {
+              "id": "41000000-0000-4000-8000-000000000004",
+              "content": "Account security. Multi-factor authentication, also called MFA, is mandatory for email, source control, payroll, and VPN access. Password sharing is prohibited."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000002",
+      "filename": "incident-response-guide.pdf",
+      "pages": [
+        {
+          "pageNumber": 1,
+          "chunks": [
+            {
+              "id": "42000000-0000-4000-8000-000000000001",
+              "content": "Critical severity incidents. The on-call engineer must acknowledge a severity-one incident within 15 minutes. Customer status updates are required every 30 minutes until mitigation."
+            }
+          ]
+        },
+        {
+          "pageNumber": 2,
+          "chunks": [
+            {
+              "id": "42000000-0000-4000-8000-000000000002",
+              "content": "Postmortems. A blameless postmortem for every severity-one or severity-two incident must be completed within five business days after resolution."
+            }
+          ]
+        },
+        {
+          "pageNumber": 3,
+          "chunks": [
+            {
+              "id": "42000000-0000-4000-8000-000000000003",
+              "content": "Incident evidence retention. Security audit logs are retained for 90 days. Evidence attached to a confirmed security incident is retained for one year."
+            }
+          ]
+        },
+        {
+          "pageNumber": 4,
+          "chunks": [
+            {
+              "id": "42000000-0000-4000-8000-000000000004",
+              "content": "Incident escalation. The primary on-call engineer pages the secondary after ten minutes without acknowledgement, then assigns an incident commander for cross-team coordination."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000003",
+      "filename": "data-governance-policy.pdf",
+      "pages": [
+        {
+          "pageNumber": 1,
+          "chunks": [
+            {
+              "id": "43000000-0000-4000-8000-000000000001",
+              "content": "Record retention. Customer financial and tax records are retained for seven years to satisfy legal obligations. Inactive customer profile data is removed after two years."
+            }
+          ]
+        },
+        {
+          "pageNumber": 2,
+          "chunks": [
+            {
+              "id": "43000000-0000-4000-8000-000000000002",
+              "content": "Deletion requests. A verified customer deletion request must be completed within 30 calendar days unless a legal hold requires specific records to remain."
+            }
+          ]
+        },
+        {
+          "pageNumber": 3,
+          "chunks": [
+            {
+              "id": "43000000-0000-4000-8000-000000000003",
+              "content": "Data classification. Information is labeled public, internal, confidential, or restricted. Payment credentials and authentication secrets are always restricted."
+            }
+          ]
+        },
+        {
+          "pageNumber": 4,
+          "chunks": [
+            {
+              "id": "43000000-0000-4000-8000-000000000004",
+              "content": "Governance backups. Compliance records are backed up daily, encrypted at rest, and retained in backup storage for 35 days."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000004",
+      "filename": "product-operations-manual.pdf",
+      "pages": [
+        {
+          "pageNumber": 1,
+          "chunks": [
+            {
+              "id": "44000000-0000-4000-8000-000000000001",
+              "content": "Maintenance window. Planned production maintenance occurs on Tuesdays from 02:00 to 04:00 UTC. Customers receive at least 48 hours notice."
+            }
+          ]
+        },
+        {
+          "pageNumber": 2,
+          "chunks": [
+            {
+              "id": "44000000-0000-4000-8000-000000000002",
+              "content": "Service backups. Production databases are backed up every six hours. Restore drills run monthly, and recovery copies remain available for 14 days."
+            }
+          ]
+        },
+        {
+          "pageNumber": 3,
+          "chunks": [
+            {
+              "id": "44000000-0000-4000-8000-000000000003",
+              "content": "Availability objectives. The standard service target is 99.9 percent monthly uptime. Enterprise service target is 99.95 percent monthly uptime."
+            }
+          ]
+        },
+        {
+          "pageNumber": 4,
+          "chunks": [
+            {
+              "id": "44000000-0000-4000-8000-000000000004",
+              "content": "Support escalation. A critical support ticket receives an initial response within 30 minutes and escalates to the duty manager if unresolved after one hour."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000005",
+      "filename": "travel-policy.pdf",
+      "pages": [
+        {
+          "pageNumber": 1,
+          "chunks": [
+            {
+              "id": "45000000-0000-4000-8000-000000000001",
+              "content": "Air travel. Economy class is required for flights under six hours. Business class for longer flights requires vice-president approval."
+            }
+          ]
+        },
+        {
+          "pageNumber": 2,
+          "chunks": [
+            {
+              "id": "45000000-0000-4000-8000-000000000002",
+              "content": "Hotels. The standard hotel limit is 220 dollars per night before tax. Conference hotels above the limit require director approval."
+            }
+          ]
+        },
+        {
+          "pageNumber": 3,
+          "chunks": [
+            {
+              "id": "45000000-0000-4000-8000-000000000003",
+              "content": "Meals. Travelers may claim up to 75 dollars per day for meals, excluding alcohol and personal entertainment."
+            }
+          ]
+        },
+        {
+          "pageNumber": 4,
+          "chunks": [
+            {
+              "id": "45000000-0000-4000-8000-000000000004",
+              "content": "Travel receipts. Itemized receipts are mandatory for travel purchases over 25 dollars. Travel claims must be filed within ten business days after returning."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

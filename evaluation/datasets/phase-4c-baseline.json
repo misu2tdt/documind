@@ -1,0 +1,214 @@
+{
+  "name": "documind-phase-4c-baseline",
+  "description": "Twenty-five manually labeled questions over the deterministic Phase 4C corpus.",
+  "cases": [
+    {
+      "id": "direct-annual-leave",
+      "question": "How many days of annual leave do full-time employees receive?",
+      "expectedSources": [
+        {
+          "filename": "employee-handbook.pdf",
+          "pageNumber": 1,
+          "chunkId": "41000000-0000-4000-8000-000000000001"
+        }
+      ]
+    },
+    {
+      "id": "direct-remote-work",
+      "question": "How many days per week may employees work remotely?",
+      "expectedSources": [
+        {
+          "filename": "employee-handbook.pdf",
+          "pageNumber": 2,
+          "chunkId": "41000000-0000-4000-8000-000000000002"
+        }
+      ]
+    },
+    {
+      "id": "direct-expense-receipt",
+      "question": "When is an itemized receipt required for a business expense?",
+      "expectedSources": [
+        {
+          "filename": "employee-handbook.pdf",
+          "pageNumber": 3,
+          "chunkId": "41000000-0000-4000-8000-000000000003"
+        }
+      ]
+    },
+    {
+      "id": "direct-mfa",
+      "question": "Which systems require MFA?",
+      "expectedSources": [
+        {
+          "filename": "employee-handbook.pdf",
+          "pageNumber": 4,
+          "chunkId": "41000000-0000-4000-8000-000000000004"
+        }
+      ]
+    },
+    {
+      "id": "direct-incident-ack",
+      "question": "How quickly must a severity-one incident be acknowledged?",
+      "expectedSources": [
+        {
+          "filename": "incident-response-guide.pdf",
+          "pageNumber": 1,
+          "chunkId": "42000000-0000-4000-8000-000000000001"
+        }
+      ]
+    },
+    {
+      "id": "direct-postmortem",
+      "question": "When must a severity-one postmortem be completed?",
+      "expectedSources": [
+        {
+          "filename": "incident-response-guide.pdf",
+          "pageNumber": 2,
+          "chunkId": "42000000-0000-4000-8000-000000000002"
+        }
+      ]
+    },
+    {
+      "id": "direct-financial-retention",
+      "question": "How long are customer financial and tax records retained?",
+      "expectedSources": [
+        {
+          "filename": "data-governance-policy.pdf",
+          "pageNumber": 1,
+          "chunkId": "43000000-0000-4000-8000-000000000001"
+        }
+      ]
+    },
+    {
+      "id": "direct-maintenance",
+      "question": "When is the production maintenance window?",
+      "expectedSources": [
+        {
+          "filename": "product-operations-manual.pdf",
+          "pageNumber": 1,
+          "chunkId": "44000000-0000-4000-8000-000000000001"
+        }
+      ]
+    },
+
+    {
+      "id": "paraphrase-vacation",
+      "question": "What is the yearly vacation allowance?",
+      "expectedSources": [
+        { "filename": "employee-handbook.pdf", "pageNumber": 1 }
+      ]
+    },
+    {
+      "id": "paraphrase-home",
+      "question": "How often can staff work from home?",
+      "expectedSources": [
+        { "filename": "employee-handbook.pdf", "pageNumber": 2 }
+      ]
+    },
+    {
+      "id": "paraphrase-proof",
+      "question": "Above what amount is proof of purchase needed for reimbursement?",
+      "expectedSources": [
+        { "filename": "employee-handbook.pdf", "pageNumber": 3 }
+      ]
+    },
+    {
+      "id": "paraphrase-two-factor",
+      "question": "Where is two-factor authentication compulsory?",
+      "expectedSources": [
+        { "filename": "employee-handbook.pdf", "pageNumber": 4 }
+      ]
+    },
+    {
+      "id": "paraphrase-severity",
+      "question": "What is the reaction time for the highest severity outage?",
+      "expectedSources": [
+        { "filename": "incident-response-guide.pdf", "pageNumber": 1 }
+      ]
+    },
+    {
+      "id": "paraphrase-delete",
+      "question": "How soon must we erase customer information after a verified request?",
+      "expectedSources": [
+        { "filename": "data-governance-policy.pdf", "pageNumber": 2 }
+      ]
+    },
+    {
+      "id": "paraphrase-downtime",
+      "question": "What hours are reserved for planned downtime?",
+      "expectedSources": [
+        { "filename": "product-operations-manual.pdf", "pageNumber": 1 }
+      ]
+    },
+    {
+      "id": "paraphrase-airfare",
+      "question": "Which cabin may be booked for a flight lasting more than six hours?",
+      "expectedSources": [{ "filename": "travel-policy.pdf", "pageNumber": 1 }]
+    },
+
+    {
+      "id": "multi-retention",
+      "question": "Compare retention for security audit logs and customer financial records.",
+      "expectedSources": [
+        { "filename": "incident-response-guide.pdf", "pageNumber": 3 },
+        { "filename": "data-governance-policy.pdf", "pageNumber": 1 }
+      ]
+    },
+    {
+      "id": "multi-backups",
+      "question": "How frequently are compliance records and production databases backed up?",
+      "expectedSources": [
+        { "filename": "data-governance-policy.pdf", "pageNumber": 4 },
+        { "filename": "product-operations-manual.pdf", "pageNumber": 2 }
+      ]
+    },
+    {
+      "id": "multi-escalation",
+      "question": "Describe the escalation routes for incidents and critical support tickets.",
+      "expectedSources": [
+        { "filename": "incident-response-guide.pdf", "pageNumber": 4 },
+        { "filename": "product-operations-manual.pdf", "pageNumber": 4 }
+      ]
+    },
+    {
+      "id": "multi-receipts",
+      "question": "Compare receipt rules for ordinary expenses and business travel.",
+      "expectedSources": [
+        { "filename": "employee-handbook.pdf", "pageNumber": 3 },
+        { "filename": "travel-policy.pdf", "pageNumber": 4 }
+      ]
+    },
+    {
+      "id": "multi-response-times",
+      "question": "What are the response commitments for severity-one incidents and critical support cases?",
+      "expectedSources": [
+        { "filename": "incident-response-guide.pdf", "pageNumber": 1 },
+        { "filename": "product-operations-manual.pdf", "pageNumber": 4 }
+      ]
+    },
+    {
+      "id": "terminology-records",
+      "question": "Which policy covers restricted payment credentials and which covers financial record retention?",
+      "expectedSources": [
+        { "filename": "data-governance-policy.pdf", "pageNumber": 3 },
+        { "filename": "data-governance-policy.pdf", "pageNumber": 1 }
+      ]
+    },
+
+    {
+      "id": "none-dress-code",
+      "question": "What is the required office dress code on Fridays?",
+      "expectedSources": []
+    },
+    {
+      "id": "none-parental-leave",
+      "question": "How many weeks of parental leave are provided?",
+      "expectedSources": []
+    },
+    {
+      "id": "none-parking",
+      "question": "Where can employees park bicycles at headquarters?",
+      "expectedSources": []
+    }
+  ]
+}
