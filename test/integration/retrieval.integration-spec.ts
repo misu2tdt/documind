@@ -11,6 +11,7 @@ import {
 import { EmbeddingService } from '../../src/embedding/embedding.service';
 import { RetrievalService } from '../../src/retrieval/retrieval.service';
 import { RetrievalEvaluationRunner } from '../../src/evaluation/retrieval-evaluation.runner';
+import { RetrievalBenchmarkRunner } from '../../src/evaluation/retrieval-benchmark.runner';
 
 const TEST_DB_HOST = process.env.TEST_DB_HOST ?? '127.0.0.1';
 const TEST_DB_PORT = Number(process.env.TEST_DB_PORT ?? 5435);
@@ -245,6 +246,71 @@ describe('Retrieval integration', () => {
     expect(report.metrics).toEqual([
       { k: 1, hitRate: 1, recall: 1, mrr: 1 },
       { k: 2, hitRate: 1, recall: 1, mrr: 1 },
+    ]);
+  });
+
+  it('benchmarks topK and similarity thresholds through real pgvector retrieval', async () => {
+    const document = await createDocument('benchmark.pdf');
+    await createChunk(document, 0, 'high-ranked distractor', vector([0, 1]));
+    const expectedA = await createChunk(
+      document,
+      1,
+      'expected at rank two',
+      vector([0, 0.9], [1, Math.sqrt(0.19)]),
+    );
+    const expectedB = await createChunk(
+      document,
+      2,
+      'expected at rank three',
+      vector([0, 0.7], [1, Math.sqrt(0.51)]),
+    );
+
+    const report = await new RetrievalBenchmarkRunner((configuration) =>
+      createRetrievalService(configuration.minimumSimilarity),
+    ).run(
+      {
+        name: 'deterministic-pgvector-benchmark',
+        cases: [
+          {
+            question: 'find expected A',
+            expectedSources: [{ chunkId: expectedA.id }],
+          },
+          {
+            question: 'find expected B',
+            expectedSources: [{ chunkId: expectedB.id }],
+          },
+        ],
+      },
+      [1, 3],
+      [0.5, 0.8],
+    );
+
+    expect(report.configurations).toEqual([
+      {
+        rank: 1,
+        configuration: { topK: 3, minimumSimilarity: 0.5 },
+        metrics: {
+          k: 3,
+          hitRate: 1,
+          recall: 1,
+          mrr: (1 / 2 + 1 / 3) / 2,
+        },
+      },
+      {
+        rank: 2,
+        configuration: { topK: 3, minimumSimilarity: 0.8 },
+        metrics: { k: 3, hitRate: 0.5, recall: 0.5, mrr: 0.25 },
+      },
+      {
+        rank: 3,
+        configuration: { topK: 1, minimumSimilarity: 0.8 },
+        metrics: { k: 1, hitRate: 0, recall: 0, mrr: 0 },
+      },
+      {
+        rank: 4,
+        configuration: { topK: 1, minimumSimilarity: 0.5 },
+        metrics: { k: 1, hitRate: 0, recall: 0, mrr: 0 },
+      },
     ]);
   });
 });
