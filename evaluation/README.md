@@ -161,7 +161,7 @@ The remaining topK=3, threshold=0.20 failures are candidate-generation
 failures, not ranking failures. Both relevant chunks rank first in the broad
 vector list but have similarities below 0.20. The MFA chunk has one of three
 lexical query terms and is removed by the two-term guard. The proof-of-purchase
-chunk has two of five terms, but the current lexical query construction feeds
+chunk has two of five terms, but the Phase 4E lexical query construction feeds
 already-stemmed English lexemes through the English tsquery parser a second
 time. That generic double-stemming bug rejects the lexical match before the
 guard. Phase 4E records the bug without changing retrieval behavior.
@@ -170,3 +170,29 @@ Because relaxed candidate recall is already 100%, a reranker cannot address
 the current misses at the selected threshold: the chunks never reach it. Fixing
 the generic lexical query construction and evaluating query expansion or
 threshold calibration should precede reranking experiments.
+
+## Phase 4F lexical candidate fix
+
+Phase 4F fixes the generic double-stemming bug without changing the lexical
+guard, production strategy, or production defaults. Query text is still
+normalized once with PostgreSQL's English text-search configuration, but the
+resulting lexemes are now assembled with the `simple` tsquery configuration so
+they are not stemmed a second time.
+
+The same corpus and benchmark grid produced these best balanced results at
+topK=3 and threshold 0.20:
+
+| Measurement | Hit Rate | Recall |    MRR | No-source accuracy | Balanced score | Failures |
+| ----------- | -------: | -----: | -----: | -----------------: | -------------: | -------: |
+| Before fix  |   90.91% | 90.91% | 0.9091 |            100.00% |         95.45% |        2 |
+| After fix   |   95.45% | 95.45% | 0.9545 |            100.00% |         97.73% |        1 |
+
+Proof-of-purchase is now admitted through its two genuine lexical matches. The
+remaining direct MFA case has vector similarity 0.1697 and only one of three
+lexical query terms, so the threshold and two-term guard still exclude it.
+
+Threshold 0.10 achieves 100% positive recall and MRR, but returns a result for
+the unsupported parental-leave question. Its no-source accuracy is 66.67% and
+balanced score is 83.33%. Threshold 0.20 therefore remains the best measured
+hybrid setting. The vector production default remains unchanged pending broader
+evaluation beyond this synthetic corpus.
