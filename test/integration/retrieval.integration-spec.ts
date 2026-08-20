@@ -300,6 +300,26 @@ describe('Retrieval integration', () => {
     ).toBe(true);
   });
 
+  it('preserves English-normalized lexemes when constructing the lexical query', async () => {
+    const document = await createDocument('morphology.pdf');
+    const relevant = await createChunk(
+      document,
+      0,
+      'Purchases are reimbursed under this policy.',
+      vector([1, 1]),
+    );
+
+    const results = await createRetrievalService(0.75, 'hybrid').search(
+      'purchase reimbursement',
+      3,
+    );
+
+    expect(results.map((result) => result.chunkId)).toContain(relevant.id);
+    expect(
+      results.find((result) => result.chunkId === relevant.id)?.similarity,
+    ).toBeLessThan(0.75);
+  });
+
   it('diagnoses candidate removal before ranking', async () => {
     const document = await createDocument('policy.pdf');
     const relevant = await createChunk(

@@ -123,6 +123,11 @@ describe('RetrievalService', () => {
       expect.stringContaining("to_tsvector('english', c.content)"),
       ['hybrid query', 20, 'completed', JSON.stringify([1, 0, 0])],
     );
+    expect(query).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("to_tsquery('simple', expression)"),
+      expect.any(Array),
+    );
   });
 
   it.each(['', '   ', '\n\t'])('rejects an empty query: %j', async (value) => {
