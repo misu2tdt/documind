@@ -196,3 +196,36 @@ the unsupported parental-leave question. Its no-source accuracy is 66.67% and
 balanced score is 83.33%. Threshold 0.20 therefore remains the best measured
 hybrid setting. The vector production default remains unchanged pending broader
 evaluation beyond this synthetic corpus.
+
+## Phase 4G live RAG evaluation
+
+The RAG evaluation dataset adds reference answers for all 22 supported cases.
+Reference answers are recorded for qualitative review; deterministic scoring
+focuses on citations and unsupported-question behavior rather than attempting
+to judge semantic answer equivalence automatically.
+
+The live runner uses the existing `RetrievalService`, `QuestionsService`, and
+`GenerationService`. Its JSON report keeps retrieval metrics separate from
+generation metrics and records every generated answer, reference answer,
+expected source, and returned citation.
+
+Start and seed the isolated evaluation database, then explicitly authorize live
+Anthropic calls with `--live`:
+
+```bash
+npm run test:integration:db:up
+npm run eval:baseline:setup
+npm run eval:rag:live -- --live --strategy hybrid --top-k 3 --threshold 0.20 --output evaluation-results/phase-4g-rag-live.json
+npm run test:integration:db:down
+```
+
+The command refuses to run without `--live` or a usable
+`ANTHROPIC_API_KEY`. It uses deterministic evaluation embeddings for the fixed
+corpus, so Anthropic generation is the only provider call.
+
+Citation precision counts returned citations matching the full expected source
+label. Citation recall measures expected labels cited at least once. Source and
+page correctness progressively check document identity and page identity for
+each returned citation. No-source accuracy requires both the exact
+insufficient-context response and zero citations. Unit and integration tests do
+not call external providers.
