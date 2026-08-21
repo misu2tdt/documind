@@ -5,6 +5,7 @@
     {
       "id": "direct-annual-leave",
       "question": "How many days of annual leave do full-time employees receive?",
+      "referenceAnswer": "Full-time employees receive 20 days of paid annual leave per calendar year.",
       "expectedSources": [
         {
           "filename": "employee-handbook.pdf",
@@ -16,6 +17,7 @@
     {
       "id": "direct-remote-work",
       "question": "How many days per week may employees work remotely?",
+      "referenceAnswer": "Employees may work remotely up to three days per week.",
       "expectedSources": [
         {
           "filename": "employee-handbook.pdf",
@@ -27,6 +29,7 @@
     {
       "id": "direct-expense-receipt",
       "question": "When is an itemized receipt required for a business expense?",
+      "referenceAnswer": "An itemized receipt is required for every business expense over 25 dollars.",
       "expectedSources": [
         {
           "filename": "employee-handbook.pdf",
@@ -38,6 +41,7 @@
     {
       "id": "direct-mfa",
       "question": "Which systems require MFA?",
+      "referenceAnswer": "MFA is mandatory for email, source control, payroll, and VPN access.",
       "expectedSources": [
         {
           "filename": "employee-handbook.pdf",
@@ -49,6 +53,7 @@
     {
       "id": "direct-incident-ack",
       "question": "How quickly must a severity-one incident be acknowledged?",
+      "referenceAnswer": "A severity-one incident must be acknowledged within 15 minutes.",
       "expectedSources": [
         {
           "filename": "incident-response-guide.pdf",
@@ -60,6 +65,7 @@
     {
       "id": "direct-postmortem",
       "question": "When must a severity-one postmortem be completed?",
+      "referenceAnswer": "A severity-one postmortem must be completed within five business days after resolution.",
       "expectedSources": [
         {
           "filename": "incident-response-guide.pdf",
@@ -71,6 +77,7 @@
     {
       "id": "direct-financial-retention",
       "question": "How long are customer financial and tax records retained?",
+      "referenceAnswer": "Customer financial and tax records are retained for seven years.",
       "expectedSources": [
         {
           "filename": "data-governance-policy.pdf",
@@ -82,6 +89,7 @@
     {
       "id": "direct-maintenance",
       "question": "When is the production maintenance window?",
+      "referenceAnswer": "Planned production maintenance occurs on Tuesdays from 02:00 to 04:00 UTC.",
       "expectedSources": [
         {
           "filename": "product-operations-manual.pdf",
@@ -94,6 +102,7 @@
     {
       "id": "paraphrase-vacation",
       "question": "What is the yearly vacation allowance?",
+      "referenceAnswer": "The yearly paid annual leave allowance is 20 days for full-time employees.",
       "expectedSources": [
         { "filename": "employee-handbook.pdf", "pageNumber": 1 }
       ]
@@ -101,6 +110,7 @@
     {
       "id": "paraphrase-home",
       "question": "How often can staff work from home?",
+      "referenceAnswer": "Employees may work from home up to three days per week.",
       "expectedSources": [
         { "filename": "employee-handbook.pdf", "pageNumber": 2 }
       ]
@@ -108,6 +118,7 @@
     {
       "id": "paraphrase-proof",
       "question": "Above what amount is proof of purchase needed for reimbursement?",
+      "referenceAnswer": "An itemized receipt is required for expenses over 25 dollars.",
       "expectedSources": [
         { "filename": "employee-handbook.pdf", "pageNumber": 3 }
       ]
@@ -115,6 +126,7 @@
     {
       "id": "paraphrase-two-factor",
       "question": "Where is two-factor authentication compulsory?",
+      "referenceAnswer": "Two-factor authentication is compulsory for email, source control, payroll, and VPN access.",
       "expectedSources": [
         { "filename": "employee-handbook.pdf", "pageNumber": 4 }
       ]
@@ -122,6 +134,7 @@
     {
       "id": "paraphrase-severity",
       "question": "What is the reaction time for the highest severity outage?",
+      "referenceAnswer": "The highest-severity incident must be acknowledged within 15 minutes.",
       "expectedSources": [
         { "filename": "incident-response-guide.pdf", "pageNumber": 1 }
       ]
@@ -129,6 +142,7 @@
     {
       "id": "paraphrase-delete",
       "question": "How soon must we erase customer information after a verified request?",
+      "referenceAnswer": "A verified deletion request must be completed within 30 calendar days unless a legal hold applies.",
       "expectedSources": [
         { "filename": "data-governance-policy.pdf", "pageNumber": 2 }
       ]
@@ -136,6 +150,7 @@
     {
       "id": "paraphrase-downtime",
       "question": "What hours are reserved for planned downtime?",
+      "referenceAnswer": "Planned production downtime is Tuesdays from 02:00 to 04:00 UTC.",
       "expectedSources": [
         { "filename": "product-operations-manual.pdf", "pageNumber": 1 }
       ]
@@ -143,12 +158,14 @@
     {
       "id": "paraphrase-airfare",
       "question": "Which cabin may be booked for a flight lasting more than six hours?",
+      "referenceAnswer": "Business class may be booked for flights longer than six hours with vice-president approval.",
       "expectedSources": [{ "filename": "travel-policy.pdf", "pageNumber": 1 }]
     },
 
     {
       "id": "multi-retention",
       "question": "Compare retention for security audit logs and customer financial records.",
+      "referenceAnswer": "Security audit logs are retained for 90 days, while customer financial records are retained for seven years.",
       "expectedSources": [
         { "filename": "incident-response-guide.pdf", "pageNumber": 3 },
         { "filename": "data-governance-policy.pdf", "pageNumber": 1 }
@@ -157,6 +174,7 @@
     {
       "id": "multi-backups",
       "question": "How frequently are compliance records and production databases backed up?",
+      "referenceAnswer": "Compliance records are backed up daily, while production databases are backed up every six hours.",
       "expectedSources": [
         { "filename": "data-governance-policy.pdf", "pageNumber": 4 },
         { "filename": "product-operations-manual.pdf", "pageNumber": 2 }
@@ -165,6 +183,7 @@
     {
       "id": "multi-escalation",
       "question": "Describe the escalation routes for incidents and critical support tickets.",
+      "referenceAnswer": "Incidents page the secondary on-call after ten minutes without acknowledgement and then assign an incident commander. Critical support tickets escalate to the duty manager if unresolved after one hour.",
       "expectedSources": [
         { "filename": "incident-response-guide.pdf", "pageNumber": 4 },
         { "filename": "product-operations-manual.pdf", "pageNumber": 4 }
@@ -173,6 +192,7 @@
     {
       "id": "multi-receipts",
       "question": "Compare receipt rules for ordinary expenses and business travel.",
+      "referenceAnswer": "Both ordinary and travel expenses require itemized receipts over 25 dollars. Ordinary claims are due within 30 calendar days of purchase; travel claims are due within ten business days after returning.",
       "expectedSources": [
         { "filename": "employee-handbook.pdf", "pageNumber": 3 },
         { "filename": "travel-policy.pdf", "pageNumber": 4 }
@@ -181,6 +201,7 @@
     {
       "id": "multi-response-times",
       "question": "What are the response commitments for severity-one incidents and critical support cases?",
+      "referenceAnswer": "Severity-one incidents require acknowledgement within 15 minutes, while critical support tickets receive an initial response within 30 minutes.",
       "expectedSources": [
         { "filename": "incident-response-guide.pdf", "pageNumber": 1 },
         { "filename": "product-operations-manual.pdf", "pageNumber": 4 }
@@ -189,6 +210,7 @@
     {
       "id": "terminology-records",
       "question": "Which policy covers restricted payment credentials and which covers financial record retention?",
+      "referenceAnswer": "The data-classification policy marks payment credentials as restricted, and the record-retention policy keeps financial records for seven years.",
       "expectedSources": [
         { "filename": "data-governance-policy.pdf", "pageNumber": 3 },
         { "filename": "data-governance-policy.pdf", "pageNumber": 1 }

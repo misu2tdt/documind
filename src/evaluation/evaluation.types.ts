@@ -11,6 +11,7 @@ export interface ExpectedSource {
 export interface RetrievalEvaluationCase {
   id?: string;
   question: string;
+  referenceAnswer?: string;
   expectedSources: ExpectedSource[];
 }
 

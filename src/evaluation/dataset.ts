@@ -40,6 +40,10 @@ function validateCase(value: unknown, index: number): RetrievalEvaluationCase {
   return {
     ...(typeof value.id === 'string' && { id: value.id }),
     question: value.question.trim(),
+    ...(typeof value.referenceAnswer === 'string' &&
+      value.referenceAnswer.trim().length > 0 && {
+        referenceAnswer: value.referenceAnswer.trim(),
+      }),
     expectedSources: value.expectedSources.map((source, sourceIndex) =>
       validateExpectedSource(source, index, sourceIndex),
     ),
